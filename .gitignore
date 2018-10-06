@@ -2,6 +2,7 @@
 # Project specific excludes
 #
 .vertx
+non-public-config.json
 debug.log
 
 # Editor directories and files
