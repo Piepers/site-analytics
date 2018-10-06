@@ -10,6 +10,7 @@ public class AnalyticsApplication extends AbstractVerticle {
 
     @Override
     public void start(Future<Void> startFuture) {
-        // set the main configuration of our application to the
+        // Set the main configuration of our application to be used.
+
     }
 }
