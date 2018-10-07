@@ -2,5 +2,8 @@
   "city": {
     "id": 2745912,
     "name": "Utrecht"
+  },
+  "http_server": {
+    "port": 8080
   }
 }
