@@ -4,6 +4,7 @@
 .vertx
 non-public-config.json
 debug.log
+static-prototype/
 
 # Editor directories and files
 .idea

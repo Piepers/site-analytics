@@ -8,7 +8,6 @@ import io.vertx.reactivex.ext.web.Router;
 import io.vertx.reactivex.ext.web.RoutingContext;
 import io.vertx.reactivex.ext.web.handler.BodyHandler;
 import io.vertx.reactivex.ext.web.handler.StaticHandler;
-import io.vertx.reactivex.ext.web.handler.TemplateHandler;
 import io.vertx.reactivex.ext.web.templ.FreeMarkerTemplateEngine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,7 +18,6 @@ public class HttpServerVerticle extends AbstractVerticle {
     private static final Logger LOGGER = LoggerFactory.getLogger(HttpServerVerticle.class);
 
     private final FreeMarkerTemplateEngine templateEngine = FreeMarkerTemplateEngine.create();
-    private final TemplateHandler templateHandler = TemplateHandler.create(templateEngine);
 
     private int port;
 
