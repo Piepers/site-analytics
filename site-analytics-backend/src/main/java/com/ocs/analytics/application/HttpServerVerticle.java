@@ -1,9 +1,13 @@
 package com.ocs.analytics.application;
 
+import io.reactivex.Observable;
+import io.reactivex.Single;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonObject;
 import io.vertx.reactivex.core.AbstractVerticle;
+import io.vertx.reactivex.core.buffer.Buffer;
 import io.vertx.reactivex.ext.web.Router;
 import io.vertx.reactivex.ext.web.RoutingContext;
 import io.vertx.reactivex.ext.web.handler.BodyHandler;
@@ -34,13 +38,29 @@ public class HttpServerVerticle extends AbstractVerticle {
 
     @Override
     public void start(Future<Void> future) {
+//        Router router = Router.router(vertx);
+//        router.route().handler(BodyHandler.create().setUploadsDirectory(".vertx/file-uploads"));
+//
+//        router.post("/import").handler(this::importHandler);
+//
+//        StaticHandler staticHandler = StaticHandler.create();
+//        // TODO: remove in production
+//        staticHandler.setCachingEnabled(false);
+//        router.route("/static/*").handler(staticHandler);
+//        router.route("/").handler(this::indexHandler);
+//
         Router router = Router.router(vertx);
-        router.route().handler(BodyHandler.create());
+
+        // Enable multipart form data parsing
+        router.route().handler(BodyHandler.create().setUploadsDirectory(".vertx/file-uploads"));
 
         StaticHandler staticHandler = StaticHandler.create();
+//         TODO: remove in production
         staticHandler.setCachingEnabled(false);
         router.route("/static/*").handler(staticHandler);
         router.route("/").handler(this::indexHandler);
+
+        router.post("/import").handler(this::importHandler);
 
         Router subRouter = Router.router(vertx);
         router.mountSubRouter("/api", subRouter);
@@ -57,14 +77,42 @@ public class HttpServerVerticle extends AbstractVerticle {
                 });
     }
 
+    private void importHandler(RoutingContext routingContext) {
+        // Offload the processing of the file to a service so that we can respond immediately.
+        Observable
+                .fromIterable(routingContext.fileUploads())
+                .map(fileUpload -> new JsonObject()
+                        .put("fileName", fileUpload.fileName())
+                        .put("uploadedFileName", fileUpload.uploadedFileName())
+                        .put("size", fileUpload.size())
+                        .put("charset", fileUpload.charSet())
+                        .put("encoding", fileUpload.contentTransferEncoding())
+                        .put("contentType", fileUpload.contentType())
+                )
+                .doOnNext(jsonObject -> vertx.eventBus().publish("file-upload", jsonObject))
+                .flatMapSingle(jsonObject -> this.renderIndex(routingContext.put("importing", true)))
+                .subscribe(result -> routingContext
+                                .response()
+                                .putHeader("Content-Type", "text/html")
+                                .end(result),
+                        throwable -> routingContext
+                                .fail(throwable));
+
+
+    }
+
     private void indexHandler(RoutingContext routingContext) {
-        routingContext.put("title", "Site Analytics");
-        templateEngine
-                .rxRender(routingContext, "templates", "/index.ftl")
+        this.renderIndex(routingContext)
                 .subscribe(result -> {
                     routingContext.response().putHeader("Content-Type", "text/html");
                     routingContext.response().end(result);
                 }, throwable -> routingContext.fail(throwable));
+    }
+
+    private Single<Buffer> renderIndex(RoutingContext routingContext) {
+        routingContext.put("title", "Site Analytics");
+        return templateEngine
+                .rxRender(routingContext, "templates", "/index.ftl");
     }
 
 }
