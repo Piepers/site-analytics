@@ -1,10 +1,12 @@
 package com.ocs.analytics.application;
 
+import com.ocs.analytics.domain.FileUpload;
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
+import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
 import io.vertx.reactivex.core.AbstractVerticle;
 import io.vertx.reactivex.core.buffer.Buffer;
@@ -16,6 +18,7 @@ import io.vertx.reactivex.ext.web.templ.FreeMarkerTemplateEngine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 public class HttpServerVerticle extends AbstractVerticle {
@@ -63,6 +66,7 @@ public class HttpServerVerticle extends AbstractVerticle {
         router.post("/import").handler(this::importHandler);
 
         Router subRouter = Router.router(vertx);
+        subRouter.route(HttpMethod.GET, "/test-trigger").handler(this::triggerPostRequest);
         router.mountSubRouter("/api", subRouter);
 
         this.vertx.createHttpServer()
@@ -77,19 +81,23 @@ public class HttpServerVerticle extends AbstractVerticle {
                 });
     }
 
+    // FIXME: remove - is just to test whether we can send and receive something to the KNMI web service that holds historical data.
+    private void triggerPostRequest(RoutingContext routingContext) {
+        vertx.eventBus().publish("trigger-test", new JsonObject());
+        routingContext
+                .response()
+                .setStatusCode(200)
+                .putHeader("Content-Type", "application/json; charset=UTF-8")
+                .end(new JsonObject().put("message", "Ok")
+                        .encode(), StandardCharsets.UTF_8.name());
+    }
+
     private void importHandler(RoutingContext routingContext) {
         // Offload the processing of the file to a service so that we can respond immediately.
         Observable
                 .fromIterable(routingContext.fileUploads())
-                .map(fileUpload -> new JsonObject()
-                        .put("fileName", fileUpload.fileName())
-                        .put("uploadedFileName", fileUpload.uploadedFileName())
-                        .put("size", fileUpload.size())
-                        .put("charset", fileUpload.charSet())
-                        .put("encoding", fileUpload.contentTransferEncoding())
-                        .put("contentType", fileUpload.contentType())
-                )
-                .doOnNext(jsonObject -> vertx.eventBus().publish("file-upload", jsonObject))
+                .map(fileUpload -> FileUpload.from(fileUpload))
+                .doOnNext(fileUpload -> vertx.eventBus().publish("file-upload", fileUpload))
                 .flatMapSingle(jsonObject -> this.renderIndex(routingContext.put("importing", true)))
                 .subscribe(result -> routingContext
                                 .response()

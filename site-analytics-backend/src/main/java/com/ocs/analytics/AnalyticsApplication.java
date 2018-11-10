@@ -1,6 +1,7 @@
 package com.ocs.analytics;
 
 import com.ocs.analytics.application.HttpServerVerticle;
+import com.ocs.analytics.application.ImportProcessVerticle;
 import io.reactivex.Completable;
 import io.vertx.config.ConfigRetrieverOptions;
 import io.vertx.config.ConfigStoreOptions;
@@ -40,6 +41,9 @@ public class AnalyticsApplication extends AbstractVerticle {
                                 .fromAction(() -> LOGGER.debug("Deploying Analytics Application backend."))
                                 .andThen(this.vertx
                                         .rxDeployVerticle(HttpServerVerticle.class.getName(), new DeploymentOptions().setConfig(configuration)))
+                                .toCompletable()
+                                .andThen(this.vertx
+                                        .rxDeployVerticle(ImportProcessVerticle.class.getName(), new DeploymentOptions()))
                                 .toCompletable())
                 .subscribe(() -> {
                     LOGGER.debug("Application deployed successfully.");
