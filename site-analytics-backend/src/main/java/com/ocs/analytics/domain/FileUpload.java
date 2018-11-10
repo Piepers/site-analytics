@@ -4,7 +4,7 @@ import io.vertx.codegen.annotations.DataObject;
 import io.vertx.core.json.JsonObject;
 
 /**
- * Representation of a the characteristics of a file that was uploaded to our web application.
+ * Representation of the characteristics of a file that was uploaded to our web application.
  *
  * @author Bas Piepers
  */

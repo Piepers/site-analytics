@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
  */
 @DataObject
 public class SiteStatistics {
+
     private final List<SiteStatistic> statistics;
 
     public SiteStatistics(List<SiteStatistic> statistics) {
