@@ -83,33 +83,6 @@ public class HistoricalParameters {
         this.validate();
     }
 
-    private void validate() {
-        if (this.startYear < 1900 || this.startYear > endYear) {
-            throw new IllegalStateException("The start year can never be greater than the end year and must be after 1900");
-        }
-
-        if (this.endYear < this.startYear) {
-            throw new IllegalStateException("Ths end year can never be before the start year.");
-        }
-
-        if (this.startMonth < 1 || this.startMonth > 12 || (this.startYear == this.endYear &&
-                this.startMonth > this.endMonth) || this.endMonth < 1 || this.endMonth > 12) {
-            throw new IllegalStateException("The start- and end-month must have a valid value (1 - 12) and can never be after the end month.");
-        }
-
-        // We do not validate for Gregorian Calendar months (whether a month has 28, 29, 30 or 31 days)
-        if (this.startDay < 1 || this.startDay > 31 || (this.startYear == this.endYear && this.startMonth == this.endMonth
-                && this.startDay > this.endDay) || this.endDay < 1 || this.endDay > 31) {
-            throw new IllegalStateException("The start day must be a valid day and must not be after the end day.");
-        }
-
-        if (this.startHour < 1 || this.startHour > 24 || this.endHour < 1 || this.endHour > 24 ||
-                (this.startYear == this.endYear && this.startMonth == this.endMonth && this.startDay == this.endDay &&
-                        this.endHour < this.startHour)) {
-            throw new IllegalStateException("The start- and end-hour must contain valid values and the end-hour can never be before the start-hour.");
-        }
-    }
-
     /**
      * Used to map the fields of this object to something we can put in a form in the
      * {@link io.vertx.core.http.HttpClient}
@@ -138,6 +111,33 @@ public class HistoricalParameters {
         }
 
         return multiMap;
+    }
+
+    private void validate() {
+        if (this.startYear < 1900 || this.startYear > endYear) {
+            throw new IllegalStateException("The start year can never be greater than the end year and must be after 1900");
+        }
+
+        if (this.endYear < this.startYear) {
+            throw new IllegalStateException("Ths end year can never be before the start year.");
+        }
+
+        if (this.startMonth < 1 || this.startMonth > 12 || (this.startYear == this.endYear &&
+                this.startMonth > this.endMonth) || this.endMonth < 1 || this.endMonth > 12) {
+            throw new IllegalStateException("The start- and end-month must have a valid value (1 - 12) and can never be after the end month.");
+        }
+
+        // We do not validate for Gregorian Calendar months (whether a month has 28, 29, 30 or 31 days)
+        if (this.startDay < 1 || this.startDay > 31 || (this.startYear == this.endYear && this.startMonth == this.endMonth
+                && this.startDay > this.endDay) || this.endDay < 1 || this.endDay > 31) {
+            throw new IllegalStateException("The start day must be a valid day and must not be after the end day.");
+        }
+
+        if (this.startHour < 1 || this.startHour > 24 || this.endHour < 1 || this.endHour > 24 ||
+                (this.startYear == this.endYear && this.startMonth == this.endMonth && this.startDay == this.endDay &&
+                        this.endHour < this.startHour)) {
+            throw new IllegalStateException("The start- and end-hour must contain valid values and the end-hour can never be before the start-hour.");
+        }
     }
 
     public String getLanguage() {
