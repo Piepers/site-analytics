@@ -8,8 +8,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- *
- * Wrapper for {@link SiteStatistic} that represents the file that was imported.
+ * Wrapper for {@link SiteStatistic} that represents the file that was imported and the enriched {@link SiteStatistic}
+ * records that contain the weather measurements. This object will be returned as a response to importing a site-
+ * statistics file.
  *
  * @author Bas Piepers
  */

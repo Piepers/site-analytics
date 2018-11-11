@@ -93,18 +93,32 @@ public class HttpServerVerticle extends AbstractVerticle {
     }
 
     private void importHandler(RoutingContext routingContext) {
-        // Offload the processing of the file to a service so that we can respond immediately.
+        // Offload the processing of the file to another Verticle so that we can respond immediately.
         Observable
                 .fromIterable(routingContext.fileUploads())
-                .map(fileUpload -> FileUpload.from(fileUpload))
-                .doOnNext(fileUpload -> vertx.eventBus().publish("file-upload", fileUpload))
-                .flatMapSingle(jsonObject -> this.renderIndex(routingContext.put("importing", true)))
-                .subscribe(result -> routingContext
-                                .response()
-                                .putHeader("Content-Type", "text/html")
-                                .end(result),
-                        throwable -> routingContext
-                                .fail(throwable));
+                .flatMapSingle(fileUpload -> {
+                    // Put the contents of what we upload into a wrapper.
+                    FileUpload wrapper = FileUpload.from(fileUpload);
+                    // To be able to send this on the event-bus, map it to a JsonObject.
+                    JsonObject jsonObject = JsonObject.mapFrom(wrapper);
+                    // Send the message and let the handler wait for the response.
+                    vertx
+                            .eventBus()
+                            .<JsonObject>rxSend("file-upload", jsonObject)
+                            .subscribe(message -> LOGGER.debug("Imported response: {}",
+                                    // TODO: implement the response of the processing.
+                                    message
+                                            .body()
+                                            .encode()),
+                                    throwable -> LOGGER.error("Something went wrong while importing the file.", throwable));
+                    // Just return with a message that we are not really going to use (could have used a completable too).
+                    return Single.just(new JsonObject().put("message", "ok"));
+                })
+                .toList()
+                .flatMap(jsonObjects -> this.renderIndex(routingContext.put("importing", true)))
+                // But return immediately (don't wait for the file(-s) to be processed.
+                .subscribe(result -> routingContext.response().putHeader("Content-Type", "text/html").end(result),
+                        throwable -> routingContext.fail(throwable));
 
 
     }
