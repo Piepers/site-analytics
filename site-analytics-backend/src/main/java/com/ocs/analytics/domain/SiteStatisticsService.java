@@ -21,7 +21,7 @@ public interface SiteStatisticsService {
     String EVENT_BUS_ADDRESS = "com.ocs.analytics.domain.SiteStatisticsService";
 
     static SiteStatisticsService create(Vertx vertx) {
-        return new SiteStatisticsServiceImpl();
+        return new SiteStatisticsServiceImpl(vertx);
     }
 
     /**

@@ -61,11 +61,13 @@ public class ImportProcessVerticle extends AbstractVerticle {
                                             .doFinally(csvFile::close)
                             )
                             .map(string -> SiteStatistic.from(string))
+                            .map(siteStatistic -> siteStatistics.addStatistic(siteStatistic))
                             // Clean up when we're finished.
                             .doFinally(() -> this.cleanup(fileUpload.getUploadedFileName()))
                             .doOnComplete(() -> LOGGER.debug("Successfully processed the file, added {} items to the site statistics.", siteStatistics.getStatistics().size()))
                             .doOnError(throwable -> LOGGER.error("Something failed while processing the imported file.", throwable))
-                            .subscribe(siteStatistic -> siteStatistics.addStatistic(siteStatistic),
+                            // TODO: call the service that enriches these site statistics.
+                            .subscribe(result -> LOGGER.debug("Processed site statistics"),
                                     throwable -> message.fail(1, "Something went wrong " +
                                             throwable.getMessage()),
                                     () -> message.reply(new JsonObject().put("message", "ok")));
