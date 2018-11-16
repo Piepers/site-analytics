@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
  * @author Bas Piepers
  */
 @DataObject
-public class SiteStatistics {
+public class SiteStatistics implements JsonDomainObject {
 
     private final List<SiteStatistic> statistics;
 
@@ -42,6 +42,16 @@ public class SiteStatistics {
     public SiteStatistics addStatistic(SiteStatistic siteStatistic) {
         this.statistics.add(siteStatistic);
         return this;
+    }
+
+    /**
+     * Add an instance of statistics based on the incoming csv.
+     *
+     * @param csv, the csv record of which we assume that it contains certain columns in certain formats.
+     */
+    public void addStatisticsFromCsv(String csv) {
+        this.statistics.add(SiteStatistic.from(csv));
+
     }
 
     @Override

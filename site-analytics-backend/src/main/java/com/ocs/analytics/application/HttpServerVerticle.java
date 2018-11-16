@@ -97,6 +97,7 @@ public class HttpServerVerticle extends AbstractVerticle {
         Observable
                 .fromIterable(routingContext.fileUploads())
                 .flatMapSingle(fileUpload -> {
+                    LOGGER.debug("Processing file: {}, {}, {}", fileUpload.fileName(), fileUpload.name(), fileUpload.uploadedFileName());
                     // Put the contents of what we upload into a wrapper.
                     FileUpload wrapper = FileUpload.from(fileUpload);
                     // To be able to send this on the event-bus, map it to a JsonObject.
@@ -114,6 +115,7 @@ public class HttpServerVerticle extends AbstractVerticle {
                     // Just return with a message that we are not really going to use (could have used a completable too).
                     return Single.just(new JsonObject().put("message", "ok"));
                 })
+                // FIXME: do this differently.
                 .toList()
                 .flatMap(jsonObjects -> this.renderIndex(routingContext.put("importing", true)))
                 // But return immediately (don't wait for the file(-s) to be processed.
