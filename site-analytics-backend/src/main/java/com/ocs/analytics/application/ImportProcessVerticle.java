@@ -48,15 +48,19 @@ public class ImportProcessVerticle extends AbstractVerticle {
                     // Map it back to a FileUpload instance.
                     FileUpload fileUpload = new FileUpload(message.body());
                     LOGGER.debug("Fileupload: {}", fileUpload.toString());
+
                     vertx
                             .fileSystem()
                             .rxOpen(fileUpload.getUploadedFileName(), new OpenOptions())
                             .flatMapObservable(csvFile -> RecordParser
-                                    .newDelimited("\n", csvFile)
-                                    .toObservable()
-                                    .doOnComplete(csvFile::close)
-                                    .map(buffer -> SiteStatistic.from(buffer.toString()))
+                                            .newDelimited("\n", csvFile)
+                                            .toObservable()
+                                            .map(buffer -> buffer.toString())
+                                            // Expect a delimited string with 5 columns and specific values
+                                            .filter(string -> string.matches("^[0-9]{10},\\d+?,\\d+?,\\d+?,\\d+?$"))
+                                            .doFinally(csvFile::close)
                             )
+                            .map(string -> SiteStatistic.from(string))
                             // Clean up when we're finished.
                             .doFinally(() -> this.cleanup(fileUpload.getUploadedFileName()))
                             .doOnComplete(() -> LOGGER.debug("Successfully processed the file, added {} items to the site statistics.", siteStatistics.getStatistics().size()))
