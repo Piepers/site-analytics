@@ -2,12 +2,12 @@ package com.ocs.analytics.domain;
 
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import io.vertx.codegen.annotations.DataObject;
-import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -24,13 +24,13 @@ public class SiteStatistic {
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern(EXPECTED_FORMAT);
 
     private final String id;
-    @JsonUnwrapped
+    @JsonUnwrapped(prefix = "year.")
     private final Year year;
-    @JsonUnwrapped
+    @JsonUnwrapped(prefix = "month.")
     private final Month month;
-    @JsonUnwrapped
+    @JsonUnwrapped(prefix = "day.")
     private final DayOfMonth day;
-    @JsonUnwrapped
+    @JsonUnwrapped(prefix = "hour.")
     private final HourOfDay hour;
     private final Long users;
     private final Long newUsers;
@@ -51,18 +51,18 @@ public class SiteStatistic {
 
     public SiteStatistic(JsonObject jsonObject) {
         this.id = jsonObject.getString("id");
-        this.year = Year.of(jsonObject.getInteger("year"));
-        this.month = Month.of(jsonObject.getInteger("month"));
-        this.day = DayOfMonth.of(jsonObject.getInteger("day"));
-        this.hour = HourOfDay.of(jsonObject.getInteger("hour"));
+        this.year = Year.of(jsonObject.getInteger("year.value"));
+        this.month = Month.of(jsonObject.getInteger("month.value"));
+        this.day = DayOfMonth.of(jsonObject.getInteger("day.value"));
+        this.hour = HourOfDay.of(jsonObject.getInteger("hour.value"));
 
         this.users = jsonObject.getLong("users");
         this.newUsers = jsonObject.getLong("newUsers");
         this.sessions = jsonObject.getLong("sessions");
-        this.weatherMeasurements = jsonObject.getJsonArray("weatherMeasurements", new JsonArray())
+        this.weatherMeasurements = Objects.nonNull(jsonObject.getJsonArray("weatherMeasurements")) ? jsonObject.getJsonArray("weatherMeasurements")
                 .stream()
                 .map(element -> new WeatherMeasurement((JsonObject) element))
-                .collect(Collectors.toList());
+                .collect(Collectors.toList()) : null;
     }
 
     /**

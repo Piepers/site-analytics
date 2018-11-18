@@ -24,6 +24,10 @@ public interface SiteStatisticsService {
         return new SiteStatisticsServiceImpl(vertx);
     }
 
+    static SiteStatisticsService createProxy(Vertx vertx) {
+        return new SiteStatisticsServiceVertxEBProxy(vertx, EVENT_BUS_ADDRESS);
+    }
+
     /**
      * Based on a fixed url, this method will enrich the already existing analytics records with weather data from a
      * weather station in The Netherlands so that a user can compare weather data with the site visits.

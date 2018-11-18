@@ -19,7 +19,6 @@ import org.slf4j.LoggerFactory;
  * site that contains historical weather data.
  *
  * @author Bas Piepers
- *
  */
 public class SiteStatisticsServiceImpl implements SiteStatisticsService {
 
@@ -41,6 +40,7 @@ public class SiteStatisticsServiceImpl implements SiteStatisticsService {
 
     @Override
     public void enrichAnalytics(SiteStatistics statistics, Handler<AsyncResult<SiteStatistics>> result) {
+        LOGGER.debug("Retrieving data to enrich the sita analytics with weather data.");
         // Ask the statistics to validate itself (must nog contain data from more than a year.)
         // Construct the request with the form data
         // match the response to the records in the statistics instance.
@@ -48,36 +48,36 @@ public class SiteStatisticsServiceImpl implements SiteStatisticsService {
 
         MultiMap form = MultiMap.caseInsensitiveMultiMap();
 
-            form.add("lang", "nl")
-                    .add("byear", "2018")
-                    .add("bmonth", "1")
-                    .add("bday", "1")
-                    .add("eyear", "2018")
-                    .add("emonth", "10")
-                    .add("eday", "27")
-                    .add("bhour", "1")
-                    .add("ehour", "24")
-                    .add("variabele", "T10N")
-                    .add("variabele", "DR")
-                    .add("variabele", "RH")
-                    .add("variabele", "U")
-                    .add("variabele", "R")
-                    .add("variabele", "S")
-                    .add("stations", "260")
-                    .add("submit", "Download dataset");
+        form.add("lang", "nl")
+                .add("byear", "2018")
+                .add("bmonth", "1")
+                .add("bday", "1")
+                .add("eyear", "2018")
+                .add("emonth", "10")
+                .add("eday", "27")
+                .add("bhour", "1")
+                .add("ehour", "24")
+                .add("variabele", "T10N")
+                .add("variabele", "DR")
+                .add("variabele", "RH")
+                .add("variabele", "U")
+                .add("variabele", "R")
+                .add("variabele", "S")
+                .add("stations", "260")
+                .add("submit", "Download dataset");
 
-            webClient
-                    .post(443, WEATHER_BASE_URL, WEATHER_REQUEST_PER_HOUR_URL)
-                    .ssl(true)
-                    .putHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8")
-                    .putHeader("Accept-Encoding", "gzip, deflate, br")
-                    .putHeader("Content-Type", "application/x-www-form-urlencoded")
-                    .rxSendForm(form)
-                    .doOnError(throwable -> LOGGER.error("Something went wrong while sending a form.", throwable))
-                    .subscribe(response -> {
-                        LOGGER.debug("Received response: {}", response.statusMessage());
-                        LOGGER.debug("Received body of response:\n{}", response.body().toString());
-                        result.handle(Future.succeededFuture(statistics));
-                    }, throwable -> result.handle(Future.failedFuture(new ServiceException(10, throwable.getMessage()))));
+        webClient
+                .post(443, WEATHER_BASE_URL, WEATHER_REQUEST_PER_HOUR_URL)
+                .ssl(true)
+                .putHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8")
+                .putHeader("Accept-Encoding", "gzip, deflate, br")
+                .putHeader("Content-Type", "application/x-www-form-urlencoded")
+                .rxSendForm(form)
+                .doOnError(throwable -> LOGGER.error("Something went wrong while sending a form.", throwable))
+                .subscribe(response -> {
+                    LOGGER.debug("Received response: {}", response.statusMessage());
+                    LOGGER.debug("Received body of response:\n{}", response.body().toString());
+                    result.handle(Future.succeededFuture(statistics));
+                }, throwable -> result.handle(Future.failedFuture(new ServiceException(10, throwable.getMessage()))));
     }
 }
