@@ -6,6 +6,7 @@ import io.vertx.core.json.JsonObject;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -18,7 +19,7 @@ import java.util.stream.Collectors;
  * @author Bas Piepers
  */
 @DataObject
-public class SiteStatistic {
+public class SiteStatistic implements Comparable<SiteStatistic> {
     private static final String EXPECTED_FORMAT = "yyyyMMddHH";
 
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern(EXPECTED_FORMAT);
@@ -140,4 +141,17 @@ public class SiteStatistic {
                 ", weatherMeasurements=" + weatherMeasurements +
                 '}';
     }
+
+    @Override
+    public int compareTo(SiteStatistic o) {
+        return COMPARATOR.compare(this, o);
+    }
+
+    // Note: this is slower than an old nested if construct.
+    private static final Comparator<SiteStatistic> COMPARATOR = Comparator
+            .comparingInt((SiteStatistic s) -> s.hour.getValue())
+            .thenComparingInt(s -> s.day.getValue())
+            .thenComparingInt(s -> s.month.getValue())
+            .thenComparingInt(s -> s.year.getValue());
+
 }
