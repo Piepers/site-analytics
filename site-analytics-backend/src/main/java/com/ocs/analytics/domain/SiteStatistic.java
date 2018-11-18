@@ -91,6 +91,19 @@ public class SiteStatistic implements Comparable<SiteStatistic> {
 
     }
 
+    @Override
+    public int compareTo(SiteStatistic o) {
+        return COMPARATOR.compare(this, o);
+    }
+
+    // Note: this is slower than an old nested if construct.
+    private static final Comparator<SiteStatistic> COMPARATOR = Comparator
+            .comparingInt((SiteStatistic s) -> s.hour.getValue())
+            .thenComparingInt(s -> s.day.getValue())
+            .thenComparingInt(s -> s.month.getValue())
+            .thenComparingInt(s -> s.year.getValue());
+
+
     public String getId() {
         return id;
     }
@@ -141,17 +154,4 @@ public class SiteStatistic implements Comparable<SiteStatistic> {
                 ", weatherMeasurements=" + weatherMeasurements +
                 '}';
     }
-
-    @Override
-    public int compareTo(SiteStatistic o) {
-        return COMPARATOR.compare(this, o);
-    }
-
-    // Note: this is slower than an old nested if construct.
-    private static final Comparator<SiteStatistic> COMPARATOR = Comparator
-            .comparingInt((SiteStatistic s) -> s.hour.getValue())
-            .thenComparingInt(s -> s.day.getValue())
-            .thenComparingInt(s -> s.month.getValue())
-            .thenComparingInt(s -> s.year.getValue());
-
 }
