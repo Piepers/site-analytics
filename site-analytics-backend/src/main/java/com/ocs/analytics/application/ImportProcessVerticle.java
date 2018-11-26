@@ -75,44 +75,10 @@ public class ImportProcessVerticle extends AbstractVerticle {
                             .subscribe();
 
                 });
-//        this.vertx.eventBus().<JsonObject>consumer("trigger-test", message -> {
-//            MultiMap form = MultiMap.caseInsensitiveMultiMap();
-//
-//            form.add("lang", "nl")
-//                    .add("byear", "2018")
-//                    .add("bmonth", "1")
-//                    .add("bday", "1")
-//                    .add("eyear", "2018")
-//                    .add("emonth", "10")
-//                    .add("eday", "27")
-//                    .add("bhour", "1")
-//                    .add("ehour", "24")
-//                    .add("variabele", "T10N")
-//                    .add("variabele", "DR")
-//                    .add("variabele", "RH")
-//                    .add("variabele", "U")
-//                    .add("variabele", "R")
-//                    .add("variabele", "S")
-//                    .add("stations", "260")
-//                    .add("submit", "Download dataset");
-//
-//            webClient
-//                    .post(443, "projects.knmi.nl", "/klimatologie/uurgegevens/getdata_uur.cgi")
-//                    .ssl(true)
-//                    .putHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8")
-//                    .putHeader("Accept-Encoding", "gzip, deflate, br")
-//                    .putHeader("Content-Type", "application/x-www-form-urlencoded")
-//                    .rxSendForm(form)
-//                    .subscribe(response -> {
-//                        LOGGER.debug("Received response: {}", response.statusMessage());
-//                        LOGGER.debug("Received body of response:\n{}", response.body().toString());
-//                    }, throwable -> LOGGER.error("Something went wrong while sending a form.", throwable));
-//        });
 
     }
 
     private void enrichStatistics(SiteStatistics siteStatistics, Message<JsonObject> message) {
-        LOGGER.debug(siteStatistics.toJson().encodePrettily());
         this.siteStatisticsService
                 .rxEnrichAnalytics(siteStatistics)
                 .subscribe(statistics -> message.reply(new JsonObject().put("result", "ok")),

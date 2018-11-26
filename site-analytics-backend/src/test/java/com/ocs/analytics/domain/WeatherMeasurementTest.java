@@ -12,10 +12,6 @@ public class WeatherMeasurementTest {
         String measurementRecord = "  260,20180101,    1,   85,     ,    0,    0,   73,    0,    0";
         WeatherMeasurement measurement = WeatherMeasurement.from(measurementRecord);
         assertThat(measurement).isNotNull();
-//        assertThat(measurement.getYear()).isEqualTo(2018);
-//        assertThat(measurement.getMonth()).isEqualTo(1);
-//        assertThat(measurement.getDay()).isEqualTo(1);
-//        assertThat(measurement.getHour()).isEqualTo(1);
         assertThat(measurement.getDurPrec()).isEqualTo(0);
         assertThat(measurement.getHumPerc()).isEqualTo(73);
         assertThat(measurement.getMin()).isNull();

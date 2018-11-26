@@ -1,43 +1,99 @@
 package com.ocs.analytics.domain;
 
+import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import io.vertx.codegen.annotations.DataObject;
 import io.vertx.core.json.JsonObject;
 
+import java.util.Comparator;
+
 /**
- * Represents the hour of day as a Json object. Can never be higher than 24 and must always be above 0. 0 is twelve o'
- * clock midnight.
+ * The hour, day, month and year in the analytics data. Is used to sort and provide a way to match the statistics data
+ * to the data that comes back from the weather station.
  *
  * @author Bas Piepers
  */
 @DataObject
-public class HourOfDay {
-
-    private int value;
+public class HourOfDay implements Comparable<HourOfDay> {
+    @JsonUnwrapped(prefix = "year.")
+    private Year year;
+    @JsonUnwrapped(prefix = "month.")
+    private Month month;
+    @JsonUnwrapped(prefix = "day.")
+    private Day day;
+    @JsonUnwrapped(prefix = "hour.")
+    private Hour hour;
 
     public HourOfDay(JsonObject jsonObject) {
-        this.value = jsonObject.getInteger("hourOfDay");
+        this.year = Year.of(jsonObject.getInteger("year.value"));
+        this.month = Month.of(jsonObject.getInteger("month.value"));
+        this.day = Day.of(jsonObject.getInteger("day.value"));
+        this.hour = Hour.of(jsonObject.getInteger("hour.value"));
     }
 
-    private HourOfDay(int value) {
-        this.value = value;
+    public HourOfDay(Year year, Month month, Day day, Hour hour) {
+        this.year = year;
+        this.month = month;
+        this.day = day;
+        this.hour = hour;
     }
 
-    public static final HourOfDay of(int value) {
-        if (value < 0 || value > 23) {
-            throw new IllegalArgumentException("Invalid value for hour of day (" + value + ").");
-        }
-
-        return new HourOfDay(value);
+    public Year getYear() {
+        return year;
     }
 
-    public int getValue() {
-        return value;
+    public Month getMonth() {
+        return month;
+    }
+
+    public Day getDay() {
+        return day;
+    }
+
+    public Hour getHour() {
+        return hour;
+    }
+
+    // Note: this is slower than an old nested if construct but makes it more readable.
+    private static final Comparator<HourOfDay> COMPARATOR = Comparator
+            .comparingInt((HourOfDay hod) -> hod.hour.getValue())
+            .thenComparingInt(s -> s.day.getValue())
+            .thenComparingInt(s -> s.month.getValue())
+            .thenComparingInt(s -> s.year.getValue());
+
+    @Override
+    public int compareTo(HourOfDay o) {
+        return COMPARATOR.compare(this, o);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        HourOfDay hourOfDay = (HourOfDay) o;
+
+        if (!year.equals(hourOfDay.year)) return false;
+        if (!month.equals(hourOfDay.month)) return false;
+        if (!day.equals(hourOfDay.day)) return false;
+        return hour.equals(hourOfDay.hour);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = year.hashCode();
+        result = 31 * result + month.hashCode();
+        result = 31 * result + day.hashCode();
+        result = 31 * result + hour.hashCode();
+        return result;
     }
 
     @Override
     public String toString() {
         return "HourOfDay{" +
-                "value=" + value +
+                "year=" + year +
+                ", month=" + month +
+                ", day=" + day +
+                ", hour=" + hour +
                 '}';
     }
 }

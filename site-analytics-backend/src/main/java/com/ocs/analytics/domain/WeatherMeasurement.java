@@ -9,7 +9,7 @@ import java.time.format.DateTimeFormatter;
 
 /**
  * A measurement record as obtained from weather station historical data that contains information about temperatures,
- * humidity and other weather characteristics on an hourly basis. Is reference to from {@link SiteStatistic} with which
+ * humidity and other weather characteristics on an hourly basis. Is referenced to from {@link SiteStatistic} with which
  * this data is enriched.
  * <p>
  * Is capable of mapping from an incoming record to an object of this instance.

@@ -6,7 +6,6 @@ import io.vertx.core.json.JsonObject;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -19,32 +18,23 @@ import java.util.stream.Collectors;
  * @author Bas Piepers
  */
 @DataObject
-public class SiteStatistic implements Comparable<SiteStatistic> {
+public class SiteStatistic {
     private static final String EXPECTED_FORMAT = "yyyyMMddHH";
 
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern(EXPECTED_FORMAT);
 
     private final String id;
-    @JsonUnwrapped(prefix = "year.")
-    private final Year year;
-    @JsonUnwrapped(prefix = "month.")
-    private final Month month;
-    @JsonUnwrapped(prefix = "day.")
-    private final DayOfMonth day;
-    @JsonUnwrapped(prefix = "hour.")
-    private final HourOfDay hour;
+    @JsonUnwrapped
+    private final HourOfDay hourOfDay;
     private final Long users;
     private final Long newUsers;
     private final Long sessions;
     private List<WeatherMeasurement> weatherMeasurements;
 
 
-    public SiteStatistic(String id, Year year, Month month, DayOfMonth day, HourOfDay hour, Long users, Long newUsers, Long sessions) {
+    public SiteStatistic(String id, HourOfDay hourOfDay, Long users, Long newUsers, Long sessions) {
         this.id = id;
-        this.year = year;
-        this.month = month;
-        this.day = day;
-        this.hour = hour;
+        this.hourOfDay = hourOfDay;
         this.users = users;
         this.newUsers = newUsers;
         this.sessions = sessions;
@@ -52,11 +42,7 @@ public class SiteStatistic implements Comparable<SiteStatistic> {
 
     public SiteStatistic(JsonObject jsonObject) {
         this.id = jsonObject.getString("id");
-        this.year = Year.of(jsonObject.getInteger("year.value"));
-        this.month = Month.of(jsonObject.getInteger("month.value"));
-        this.day = DayOfMonth.of(jsonObject.getInteger("day.value"));
-        this.hour = HourOfDay.of(jsonObject.getInteger("hour.value"));
-
+        this.hourOfDay = new HourOfDay(jsonObject);
         this.users = jsonObject.getLong("users");
         this.newUsers = jsonObject.getLong("newUsers");
         this.sessions = jsonObject.getLong("sessions");
@@ -86,42 +72,16 @@ public class SiteStatistic implements Comparable<SiteStatistic> {
         Long newUsers = Long.valueOf(contents[2]);
         Long sessions = Long.valueOf(contents[3]);
 
-        return new SiteStatistic(UUID.randomUUID().toString(), Year.of(ldt.getYear()), Month.of(ldt.getMonthValue()),
-                DayOfMonth.of(ldt.getDayOfMonth()), HourOfDay.of(ldt.getHour()), users, newUsers, sessions);
-
+        return new SiteStatistic(UUID.randomUUID().toString(), new HourOfDay(Year.of(ldt.getYear()), Month.of(ldt.getMonthValue()),
+                Day.of(ldt.getDayOfMonth()), Hour.of(ldt.getHour())), users, newUsers, sessions);
     }
-
-    @Override
-    public int compareTo(SiteStatistic o) {
-        return COMPARATOR.compare(this, o);
-    }
-
-    // Note: this is slower than an old nested if construct.
-    private static final Comparator<SiteStatistic> COMPARATOR = Comparator
-            .comparingInt((SiteStatistic s) -> s.hour.getValue())
-            .thenComparingInt(s -> s.day.getValue())
-            .thenComparingInt(s -> s.month.getValue())
-            .thenComparingInt(s -> s.year.getValue());
-
 
     public String getId() {
         return id;
     }
 
-    public Year getYear() {
-        return year;
-    }
-
-    public Month getMonth() {
-        return month;
-    }
-
-    public DayOfMonth getDay() {
-        return day;
-    }
-
-    public HourOfDay getHour() {
-        return hour;
+    public HourOfDay getHourOfDay() {
+        return hourOfDay;
     }
 
     public Long getUsers() {
@@ -136,6 +96,27 @@ public class SiteStatistic implements Comparable<SiteStatistic> {
         return sessions;
     }
 
+    /**
+     * Some convenience getters for temporal fields
+     *
+     * @return
+     */
+    public int year() {
+        return this.hourOfDay.getYear().getValue();
+    }
+
+    public int month() {
+        return this.hourOfDay.getMonth().getValue();
+    }
+
+    public int day() {
+        return this.hourOfDay.getDay().getValue();
+    }
+
+    public int hour() {
+       return this.hourOfDay.getHour().getValue();
+
+    }
     public List<WeatherMeasurement> getWeatherMeasurements() {
         return weatherMeasurements;
     }
@@ -144,10 +125,7 @@ public class SiteStatistic implements Comparable<SiteStatistic> {
     public String toString() {
         return "SiteStatistic{" +
                 "id='" + id + '\'' +
-                ", year=" + year +
-                ", month=" + month +
-                ", day=" + day +
-                ", hour=" + hour +
+                ", hourOfDay=" + hourOfDay +
                 ", users=" + users +
                 ", newUsers=" + newUsers +
                 ", sessions=" + sessions +

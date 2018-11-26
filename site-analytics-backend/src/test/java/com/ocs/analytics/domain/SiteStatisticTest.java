@@ -14,10 +14,10 @@ public class SiteStatisticTest {
         String record = "2018100213,123,321,333,0";
 
         SiteStatistic s = SiteStatistic.from(record);
-        assertThat(s.getYear().getValue()).isEqualTo(2018);
-        assertThat(s.getMonth().getValue()).isEqualTo(10);
-        assertThat(s.getDay().getValue()).isEqualTo(2);
-        assertThat(s.getHour().getValue()).isEqualTo(13);
+        assertThat(s.year()).isEqualTo(2018);
+        assertThat(s.month()).isEqualTo(10);
+        assertThat(s.day()).isEqualTo(2);
+        assertThat(s.hour()).isEqualTo(13);
         assertThat(s.getUsers()).isEqualTo(123L);
         assertThat(s.getNewUsers()).isEqualTo(321L);
         assertThat(s.getSessions()).isEqualTo(333L);

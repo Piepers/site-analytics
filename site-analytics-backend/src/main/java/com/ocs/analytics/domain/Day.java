@@ -7,23 +7,23 @@ import java.time.Month;
 import java.time.MonthDay;
 
 @DataObject
-public class DayOfMonth {
+public class Day {
 
     private int value;
 
-    public DayOfMonth(JsonObject jsonObject) {
-        this.value = jsonObject.getInteger("dayOfMonth");
+    public Day(JsonObject jsonObject) {
+        this.value = jsonObject.getInteger("day");
     }
 
-    private DayOfMonth(int value) {
+    private Day(int value) {
         this.value = value;
     }
 
-    public static final DayOfMonth of(int value) {
+    public static final Day of(int value) {
         if (value > 31 || value < 1) {
             throw new IllegalArgumentException("Invalid value for day of month.");
         }
-        return new DayOfMonth(value);
+        return new Day(value);
     }
 
     // May throw an exception if the value is too high (eg for months that don't have 31 days while value is 31).
@@ -37,7 +37,7 @@ public class DayOfMonth {
 
     @Override
     public String toString() {
-        return "DayOfMonth{" +
+        return "Day{" +
                 "value=" + value +
                 '}';
     }
