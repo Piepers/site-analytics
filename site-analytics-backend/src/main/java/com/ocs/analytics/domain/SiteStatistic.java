@@ -6,19 +6,21 @@ import io.vertx.core.json.JsonObject;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
+import java.util.Comparator;
 import java.util.Objects;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 /**
  * Represents one statistic record of an imported file of a website enriched with (historical-) weather measurements. Is
  * capable of mapping from CSV to an instance of itself.
+ * <p>
+ * SiteStatistic implements Comparable because we would like to be sure that we can sort it by the date
+ * (the hour of the day).
  *
  * @author Bas Piepers
  */
 @DataObject
-public class SiteStatistic {
+public class SiteStatistic implements Comparable<SiteStatistic> {
     private static final String EXPECTED_FORMAT = "yyyyMMddHH";
 
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern(EXPECTED_FORMAT);
@@ -29,7 +31,8 @@ public class SiteStatistic {
     private final Long users;
     private final Long newUsers;
     private final Long sessions;
-    private List<WeatherMeasurement> weatherMeasurements;
+    // The weather measurements of one hour.
+    private WeatherMeasurement weatherMeasurements;
 
 
     public SiteStatistic(String id, HourOfDay hourOfDay, Long users, Long newUsers, Long sessions) {
@@ -46,10 +49,7 @@ public class SiteStatistic {
         this.users = jsonObject.getLong("users");
         this.newUsers = jsonObject.getLong("newUsers");
         this.sessions = jsonObject.getLong("sessions");
-        this.weatherMeasurements = Objects.nonNull(jsonObject.getJsonArray("weatherMeasurements")) ? jsonObject.getJsonArray("weatherMeasurements")
-                .stream()
-                .map(element -> new WeatherMeasurement((JsonObject) element))
-                .collect(Collectors.toList()) : null;
+        this.weatherMeasurements = Objects.nonNull(jsonObject.getJsonObject("weatherMeasurement")) ? new WeatherMeasurement(jsonObject.getJsonObject("weatherMeasurements")) : null;
     }
 
     /**
@@ -114,11 +114,39 @@ public class SiteStatistic {
     }
 
     public int hour() {
-       return this.hourOfDay.getHour().getValue();
+        return this.hourOfDay.getHour().getValue();
 
     }
-    public List<WeatherMeasurement> getWeatherMeasurements() {
+
+    public WeatherMeasurement getWeatherMeasurements() {
         return weatherMeasurements;
+    }
+
+    // Note: this is slower than an old nested if construct but makes it more readable.
+    private static final Comparator<SiteStatistic> COMPARATOR = Comparator
+            .comparingInt((SiteStatistic ss) -> ss.hourOfDay.getHour().getValue())
+            .thenComparingInt(ss -> ss.hourOfDay.getDay().getValue())
+            .thenComparingInt(ss -> ss.hourOfDay.getMonth().getValue())
+            .thenComparingInt(ss -> ss.hourOfDay.getYear().getValue());
+
+    @Override
+    public int compareTo(SiteStatistic o) {
+        return COMPARATOR.compare(this, o);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        SiteStatistic that = (SiteStatistic) o;
+
+        return id.equals(that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return id.hashCode();
     }
 
     @Override

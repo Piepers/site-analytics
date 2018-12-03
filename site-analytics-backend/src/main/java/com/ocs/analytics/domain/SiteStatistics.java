@@ -3,8 +3,8 @@ package com.ocs.analytics.domain;
 import io.vertx.codegen.annotations.DataObject;
 import io.vertx.core.json.JsonObject;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 /**
@@ -17,14 +17,14 @@ import java.util.stream.Collectors;
 @DataObject
 public class SiteStatistics implements JsonDomainObject {
 
-    private final List<SiteStatistic> statistics;
+    private final Set<SiteStatistic> statistics;
 
-    public SiteStatistics(List<SiteStatistic> statistics) {
+    public SiteStatistics(TreeSet<SiteStatistic> statistics) {
         this.statistics = statistics;
     }
 
     public SiteStatistics() {
-        this.statistics = new ArrayList<>();
+        this.statistics = new TreeSet<>();
     }
 
     public SiteStatistics(JsonObject jsonObject) {
@@ -32,10 +32,10 @@ public class SiteStatistics implements JsonDomainObject {
                 .getJsonArray("statistics")
                 .stream()
                 .map(o -> new SiteStatistic((JsonObject) o))
-                .collect(Collectors.toList());
+                .collect(Collectors.toCollection(() -> new TreeSet<>()));
     }
 
-    public List<SiteStatistic> getStatistics() {
+    public Set<SiteStatistic> getStatistics() {
         return statistics;
     }
 

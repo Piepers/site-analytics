@@ -13,7 +13,7 @@ import java.util.Comparator;
  * @author Bas Piepers
  */
 @DataObject
-public class HourOfDay implements Comparable<HourOfDay> {
+public class HourOfDay {
     @JsonUnwrapped(prefix = "year.")
     private Year year;
     @JsonUnwrapped(prefix = "month.")
@@ -37,6 +37,10 @@ public class HourOfDay implements Comparable<HourOfDay> {
         this.hour = hour;
     }
 
+    public static HourOfDay of(int year, int month, int day, int hour) {
+        return new HourOfDay(Year.of(year), Month.of(month), Day.of(day), Hour.of(hour));
+    }
+
     public Year getYear() {
         return year;
     }
@@ -53,17 +57,6 @@ public class HourOfDay implements Comparable<HourOfDay> {
         return hour;
     }
 
-    // Note: this is slower than an old nested if construct but makes it more readable.
-    private static final Comparator<HourOfDay> COMPARATOR = Comparator
-            .comparingInt((HourOfDay hod) -> hod.hour.getValue())
-            .thenComparingInt(s -> s.day.getValue())
-            .thenComparingInt(s -> s.month.getValue())
-            .thenComparingInt(s -> s.year.getValue());
-
-    @Override
-    public int compareTo(HourOfDay o) {
-        return COMPARATOR.compare(this, o);
-    }
 
     @Override
     public boolean equals(Object o) {

@@ -1,5 +1,6 @@
 package com.ocs.analytics.infrastructure;
 
+import com.ocs.analytics.domain.SiteStatistic;
 import com.ocs.analytics.domain.SiteStatistics;
 import com.ocs.analytics.domain.SiteStatisticsService;
 import io.vertx.core.AsyncResult;
@@ -12,6 +13,8 @@ import io.vertx.reactivex.ext.web.client.WebClient;
 import io.vertx.serviceproxy.ServiceException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.TreeSet;
 
 /**
  * Implementtion of the {@link SiteStatisticsService} that instantiates a webclient with a webclient pool (because
@@ -40,12 +43,16 @@ public class SiteStatisticsServiceImpl implements SiteStatisticsService {
 
     @Override
     public void enrichAnalytics(SiteStatistics statistics, Handler<AsyncResult<SiteStatistics>> result) {
-        LOGGER.debug("Retrieving data to enrich the sita analytics with weather data.");
+        LOGGER.debug("Retrieving data to enrich the site analytics with weather data.");
         // Ask the statistics to validate itself (must nog contain data from more than a year.)
         // Construct the request with the form data
         // match the response to the records in the statistics instance.
         // TODO: implement (not finished)
+        SiteStatistic first = ((TreeSet<SiteStatistic>) statistics.getStatistics()).first();
+        SiteStatistic last = ((TreeSet<SiteStatistic>) statistics.getStatistics()).last();
 
+        LOGGER.debug("Received first statistic of {}.\nLast statistic of {}.", first, last);
+        // Create the map to be sent to the website.
         MultiMap form = MultiMap.caseInsensitiveMultiMap();
 
         form.add("lang", "nl")

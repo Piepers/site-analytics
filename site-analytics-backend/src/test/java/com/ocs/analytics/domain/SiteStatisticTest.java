@@ -3,6 +3,10 @@ package com.ocs.analytics.domain;
 import org.junit.jupiter.api.Test;
 
 import java.time.format.DateTimeParseException;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.TreeSet;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -52,5 +56,15 @@ public class SiteStatisticTest {
     public void test_that_when_invalid_hour_is_passed_that_this_throws_exception() {
         String record = "2018113025,123,321,333,0";
         assertThatThrownBy(() -> SiteStatistic.from(record)).isInstanceOf(DateTimeParseException.class);
+    }
+
+    @Test
+    public void test_that_sort_works_as_expected() {
+        Set<SiteStatistic> testSet = new TreeSet<>();
+        SiteStatistic ss1 = new SiteStatistic("1", HourOfDay.of(2018, 10, 4, 5), 10L, 2L, 5L);
+        SiteStatistic ss2 = new SiteStatistic("2", HourOfDay.of(2017, 3, 3, 3), 1L, 2L, 4L);
+        Collections.addAll(testSet, ss1, ss2);
+
+        assertThat(testSet).containsSequence(ss2, ss1);
     }
 }
