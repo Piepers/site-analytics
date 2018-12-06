@@ -20,7 +20,7 @@ import java.util.UUID;
  * @author Bas Piepers
  */
 @DataObject
-public class SiteStatistic implements Comparable<SiteStatistic> {
+public class SiteStatistic implements Comparable<SiteStatistic>, JsonDomainObject {
     private static final String EXPECTED_FORMAT = "yyyyMMddHH";
 
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern(EXPECTED_FORMAT);

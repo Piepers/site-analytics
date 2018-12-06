@@ -1,9 +1,9 @@
 package com.ocs.analytics.domain;
 
 import io.vertx.codegen.annotations.DataObject;
-import io.vertx.core.MultiMap;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.reactivex.core.MultiMap;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -62,8 +62,8 @@ public class HistoricalParameters {
     /**
      * A constructor with some validation.
      */
-    public HistoricalParameters(String language, int startYear, int startMonth, int startDay, int endYear, int endMonth,
-                                int endDay, int startHour, int endHour, String stations, String... variables) {
+    private HistoricalParameters(String language, int startYear, int startMonth, int startDay, int endYear, int endMonth,
+                                 int endDay, int startHour, int endHour, String stations, String... variables) {
 
         this.language = language;
         this.startYear = startYear;
@@ -79,8 +79,20 @@ public class HistoricalParameters {
         if (Objects.nonNull(variables)) {
             this.variables = Arrays.stream(variables).collect(Collectors.toList());
         }
+    }
 
-        this.validate();
+    /**
+     * Assumes that the hours are starting at 0 for midnight and end at 23 and so it will add one hour because the
+     * web site where the values are taken from has a 1 to 24 hour format.
+     */
+    public static final HistoricalParameters with(String language, int startYear, int startMonth, int startDay, int endYear, int endMonth,
+                                                  int endDay, int startHour, int endHour, String stations, String... variables) {
+        HistoricalParameters h = new HistoricalParameters(language, startYear, startMonth, startDay, endYear, endMonth, endDay, startHour + 1, endHour + 1, stations, variables);
+
+        h.validate();
+
+        return h;
+
     }
 
     /**

@@ -1,5 +1,6 @@
 package com.ocs.analytics.infrastructure;
 
+import com.ocs.analytics.domain.HistoricalParameters;
 import com.ocs.analytics.domain.SiteStatistic;
 import com.ocs.analytics.domain.SiteStatistics;
 import com.ocs.analytics.domain.SiteStatisticsService;
@@ -44,7 +45,7 @@ public class SiteStatisticsServiceImpl implements SiteStatisticsService {
     @Override
     public void enrichAnalytics(SiteStatistics statistics, Handler<AsyncResult<SiteStatistics>> result) {
         LOGGER.debug("Retrieving data to enrich the site analytics with weather data.");
-        // Ask the statistics to validate itself (must nog contain data from more than a year.)
+        // Ask the statistics to validate itself (must not contain data from more than a year.)
         // Construct the request with the form data
         // match the response to the records in the statistics instance.
         // TODO: implement (not finished)
@@ -52,26 +53,29 @@ public class SiteStatisticsServiceImpl implements SiteStatisticsService {
         SiteStatistic last = ((TreeSet<SiteStatistic>) statistics.getStatistics()).last();
 
         LOGGER.debug("Received first statistic of {}.\nLast statistic of {}.", first, last);
+        String stations = "260"; // Represents "De Bilt"
+        HistoricalParameters parameters = HistoricalParameters.with("nl", first.year(), first.month(),
+                first.day(), last.year(), last.month(), last.day(), first.hour(), last.hour(), stations, "T10N", "DR", "RH", "U", "R", "S");
         // Create the map to be sent to the website.
-        MultiMap form = MultiMap.caseInsensitiveMultiMap();
+        MultiMap form = parameters.asMultiMapForForm();
 
-        form.add("lang", "nl")
-                .add("byear", "2018")
-                .add("bmonth", "1")
-                .add("bday", "1")
-                .add("eyear", "2018")
-                .add("emonth", "10")
-                .add("eday", "27")
-                .add("bhour", "1")
-                .add("ehour", "24")
-                .add("variabele", "T10N")
-                .add("variabele", "DR")
-                .add("variabele", "RH")
-                .add("variabele", "U")
-                .add("variabele", "R")
-                .add("variabele", "S")
-                .add("stations", "260")
-                .add("submit", "Download dataset");
+//        form.add("lang", "nl")
+//                .add("byear", "2018")
+//                .add("bmonth", "1")
+//                .add("bday", "1")
+//                .add("eyear", "2018")
+//                .add("emonth", "10")
+//                .add("eday", "27")
+//                .add("bhour", "1")
+//                .add("ehour", "24")
+//                .add("variabele", "T10N")
+//                .add("variabele", "DR")
+//                .add("variabele", "RH")
+//                .add("variabele", "U")
+//                .add("variabele", "R")
+//                .add("variabele", "S")
+//                .add("stations", "260")
+//                .add("submit", "Download dataset");
 
         webClient
                 .post(443, WEATHER_BASE_URL, WEATHER_REQUEST_PER_HOUR_URL)

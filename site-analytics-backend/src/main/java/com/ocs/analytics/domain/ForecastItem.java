@@ -10,10 +10,9 @@ import java.util.stream.Collectors;
  * Represents an item in the forecast of the weather. Contain data for a three hour period of time.
  *
  * @author Bas Piepers
- *
  */
 @DataObject
-public class ForecastItem {
+public class ForecastItem implements JsonDomainObject {
     private final Long dt;
     private final String dtText;
     private final Float temp;
@@ -57,7 +56,7 @@ public class ForecastItem {
         this.groundLevel = jsonObject.getFloat("groundLevel");
         this.humidity = jsonObject.getInteger("humidity");
         this.tempKf = jsonObject.getFloat("tempKf");
-        this.weather = jsonObject.getJsonArray("weather").stream().map(o-> new WeatherItem((JsonObject)o)).collect(Collectors.toList());
+        this.weather = jsonObject.getJsonArray("weather").stream().map(o -> new WeatherItem((JsonObject) o)).collect(Collectors.toList());
         this.clouds = new Clouds(jsonObject.getJsonObject("clouds"));
         this.wind = new Wind(jsonObject.getJsonObject("wind"));
     }
