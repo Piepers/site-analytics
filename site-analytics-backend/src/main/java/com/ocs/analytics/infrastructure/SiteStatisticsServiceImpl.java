@@ -14,10 +14,8 @@ import io.vertx.serviceproxy.ServiceException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.TreeSet;
-
 /**
- * Implementtion of the {@link SiteStatisticsService} that instantiates a webclient with a webclient pool (because
+ * Implementation of the {@link SiteStatisticsService} that instantiates a webclient with a webclient pool (because
  * there is only one instance of this service in the application). This webclient is used to invoke requests to a
  * site that contains historical weather data.
  *
@@ -44,26 +42,27 @@ public class SiteStatisticsServiceImpl implements SiteStatisticsService {
     @Override
     public void enrichAnalytics(SiteStatistics statistics, Handler<AsyncResult<SiteStatistics>> result) {
         LOGGER.debug("Retrieving data to enrich the site analytics with weather data.");
-        // Ask the statistics to validate itself (must nog contain data from more than a year.)
-        // Construct the request with the form data
-        // match the response to the records in the statistics instance.
-        // TODO: implement (not finished)
-        SiteStatistic first = ((TreeSet<SiteStatistic>) statistics.getStatistics()).first();
-        SiteStatistic last = ((TreeSet<SiteStatistic>) statistics.getStatistics()).last();
+        SiteStatistic first = statistics.first();
+        SiteStatistic last = statistics.last();
 
         LOGGER.debug("Received first statistic of {}.\nLast statistic of {}.", first, last);
+
+        if (statistics.spansMoreThanAYear()) {
+            throw new ServiceException(500, "This service does not allow a longer time range of more than 12 months for the site-statistics.");
+        }
+
         // Create the map to be sent to the website.
         MultiMap form = MultiMap.caseInsensitiveMultiMap();
 
         form.add("lang", "nl")
-                .add("byear", "2018")
-                .add("bmonth", "1")
-                .add("bday", "1")
-                .add("eyear", "2018")
-                .add("emonth", "10")
-                .add("eday", "27")
-                .add("bhour", "1")
-                .add("ehour", "24")
+                .add("byear", first.getHourOfDay().yearAsString())
+                .add("bmonth", first.getHourOfDay().monthAsString())
+                .add("bday", first.getHourOfDay().dayAsString())
+                .add("eyear", last.getHourOfDay().yearAsString())
+                .add("emonth", last.getHourOfDay().monthAsString())
+                .add("eday", last.getHourOfDay().dayAsString())
+                .add("bhour", "" + first.getHourOfDay() + 1)
+                .add("ehour", "" + last.getHourOfDay() + 1)
                 .add("variabele", "T10N")
                 .add("variabele", "DR")
                 .add("variabele", "RH")
@@ -84,6 +83,8 @@ public class SiteStatisticsServiceImpl implements SiteStatisticsService {
                 .subscribe(response -> {
                     LOGGER.debug("Received response: {}", response.statusMessage());
                     LOGGER.debug("Received body of response:\n{}", response.body().toString());
+                    // TODO: call SiteStatistics.addMeasurementBasedOnCsv(...)
+
                     result.handle(Future.succeededFuture(statistics));
                 }, throwable -> result.handle(Future.failedFuture(new ServiceException(10, throwable.getMessage()))));
     }

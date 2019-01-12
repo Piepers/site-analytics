@@ -45,6 +45,22 @@ public class HourOfDay {
         return year;
     }
 
+    public String yearAsString() {
+        return String.valueOf(year.getValue());
+    }
+
+    public String monthAsString() {
+        return String.valueOf(month.getValue());
+    }
+
+    public String dayAsString() {
+        return String.valueOf(day.getValue());
+    }
+
+    public String hourAsString() {
+        return String.valueOf(hour.getValue());
+    }
+
     public Month getMonth() {
         return month;
     }

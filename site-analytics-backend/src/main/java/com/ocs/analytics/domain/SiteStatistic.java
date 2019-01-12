@@ -122,6 +122,17 @@ public class SiteStatistic implements Comparable<SiteStatistic> {
         return weatherMeasurements;
     }
 
+    /**
+     * Set the weather measurement element for this site statistic.
+     *
+     * @param weatherMeasurements, the {@link WeatherMeasurement} for this instance.
+     * @return an instance of this class for fluent API building.
+     */
+    public SiteStatistic weatherMeasurement(WeatherMeasurement weatherMeasurements) {
+        this.weatherMeasurements = weatherMeasurements;
+        return this;
+    }
+
     // Note: this is slower than an old nested if construct but makes it more readable.
     private static final Comparator<SiteStatistic> COMPARATOR = Comparator
             .comparingInt((SiteStatistic ss) -> ss.hourOfDay.getHour().getValue())
