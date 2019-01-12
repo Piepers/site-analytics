@@ -1,5 +1,6 @@
 package com.ocs.analytics.infrastructure;
 
+import com.ocs.analytics.domain.HistoricalParameters;
 import com.ocs.analytics.domain.SiteStatistic;
 import com.ocs.analytics.domain.SiteStatistics;
 import com.ocs.analytics.domain.SiteStatisticsService;
@@ -51,26 +52,11 @@ public class SiteStatisticsServiceImpl implements SiteStatisticsService {
             throw new ServiceException(500, "This service does not allow a longer time range of more than 12 months for the site-statistics.");
         }
 
+        String stations = "260"; // Represents "De Bilt"
+        HistoricalParameters parameters = HistoricalParameters.with("nl", first.year(), first.month(),
+                first.day(), last.year(), last.month(), last.day(), first.hour(), last.hour(), stations, "T10N", "DR", "RH", "U", "R", "S");
         // Create the map to be sent to the website.
-        MultiMap form = MultiMap.caseInsensitiveMultiMap();
-
-        form.add("lang", "nl")
-                .add("byear", first.getHourOfDay().yearAsString())
-                .add("bmonth", first.getHourOfDay().monthAsString())
-                .add("bday", first.getHourOfDay().dayAsString())
-                .add("eyear", last.getHourOfDay().yearAsString())
-                .add("emonth", last.getHourOfDay().monthAsString())
-                .add("eday", last.getHourOfDay().dayAsString())
-                .add("bhour", "" + first.getHourOfDay() + 1)
-                .add("ehour", "" + last.getHourOfDay() + 1)
-                .add("variabele", "T10N")
-                .add("variabele", "DR")
-                .add("variabele", "RH")
-                .add("variabele", "U")
-                .add("variabele", "R")
-                .add("variabele", "S")
-                .add("stations", "260")
-                .add("submit", "Download dataset");
+        MultiMap form = parameters.asMultiMapForForm();
 
         webClient
                 .post(443, WEATHER_BASE_URL, WEATHER_REQUEST_PER_HOUR_URL)

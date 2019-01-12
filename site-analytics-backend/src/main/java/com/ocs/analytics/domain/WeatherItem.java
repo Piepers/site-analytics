@@ -9,7 +9,7 @@ import io.vertx.core.json.JsonObject;
  * @author Bas Piepers
  */
 @DataObject
-public class WeatherItem {
+public class WeatherItem implements JsonDomainObject {
     private final Long id;
     private final String main;
     private final String description;

@@ -17,7 +17,7 @@ import java.time.format.DateTimeFormatter;
  * @author Bas Piepers
  */
 @DataObject
-public class WeatherMeasurement {
+public class WeatherMeasurement implements JsonDomainObject {
     private final Integer temperature; // in 0.1 degrees celsius
     private Integer min; // minimum temp. in the last 6 hours. Will be null in the rest of the hours.
     private final Integer durPrec; // duration of the precipitation. Can be 0 for no rainfall. in 0.1 hours.
