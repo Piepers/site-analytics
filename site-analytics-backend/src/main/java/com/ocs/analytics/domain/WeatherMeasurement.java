@@ -1,11 +1,8 @@
 package com.ocs.analytics.domain;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.vertx.codegen.annotations.DataObject;
 import io.vertx.core.json.JsonObject;
 import org.apache.commons.lang3.StringUtils;
-
-import java.time.format.DateTimeFormatter;
 
 /**
  * A measurement record as obtained from weather station historical data that contains information about temperatures,
@@ -26,9 +23,6 @@ public class WeatherMeasurement implements JsonDomainObject {
     private final Boolean rain; // did it rain in the previous hour?
     private final Boolean snow; // did it snow in the previous hour?
 
-    @JsonIgnore
-    private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
-
     public WeatherMeasurement(JsonObject jsonObject) {
         this.temperature = jsonObject.getInteger("temperature");
         this.min = jsonObject.getInteger("min");
@@ -45,21 +39,20 @@ public class WeatherMeasurement implements JsonDomainObject {
      * @param measurementRecord, a measurement record as obtained from the KNMI website.
      * @return an instance of this class.
      */
-    public static WeatherMeasurement from(String measurementRecord) {
-        String[] contents = measurementRecord.replaceAll("\\s+", "").split(",");
+    public static WeatherMeasurement from(String[] measurementRecord) {
 
-        if (contents.length != 10) {
+        if (measurementRecord.length != 10) {
             // We received something we didn't expect. Throw an exception
             throw new IllegalArgumentException("The measurement record did not contain the expected content (" + measurementRecord + ")");
         }
 
-        Integer temperature = Integer.valueOf(contents[3]);
-        Integer min = StringUtils.isNotEmpty(contents[4]) ? Integer.valueOf(contents[4]) : null;
-        Integer durPerc = Integer.valueOf(contents[5]);
-        Integer sumPerc = Integer.valueOf(contents[6]);
-        Integer humPerc = Integer.valueOf(contents[7]);
-        Boolean rain = Integer.valueOf(contents[8]) == 0 ? false : true;
-        Boolean snow = Integer.valueOf(contents[9]) == 0 ? false : true;
+        Integer temperature = Integer.valueOf(measurementRecord[3]);
+        Integer min = StringUtils.isNotEmpty(measurementRecord[4]) ? Integer.valueOf(measurementRecord[4]) : null;
+        Integer durPerc = Integer.valueOf(measurementRecord[5]);
+        Integer sumPerc = Integer.valueOf(measurementRecord[6]);
+        Integer humPerc = Integer.valueOf(measurementRecord[7]);
+        Boolean rain = Integer.valueOf(measurementRecord[8]) == 0 ? false : true;
+        Boolean snow = Integer.valueOf(measurementRecord[9]) == 0 ? false : true;
         return new WeatherMeasurement(temperature, min, durPerc, sumPerc, humPerc, rain, snow);
     }
 

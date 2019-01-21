@@ -118,7 +118,7 @@ public class HttpServerVerticle extends AbstractVerticle {
                 // FIXME: do this differently.
                 .toList()
                 .flatMap(jsonObjects -> this.renderIndex(routingContext.put("importing", true)))
-                // But return immediately (don't wait for the file(-s) to be processed.
+                // But return immediately (don't wait for the file(-s) to be processed).
                 .subscribe(result -> routingContext.response().putHeader("Content-Type", "text/html").end(result),
                         throwable -> routingContext.fail(throwable));
 

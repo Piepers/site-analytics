@@ -31,14 +31,6 @@ public class ImportProcessVerticle extends AbstractVerticle {
         super.init(vertx, context);
         this.rxVertx = new io.vertx.reactivex.core.Vertx(vertx);
         this.siteStatisticsService = SiteStatisticsService.createProxy(rxVertx);
-//        this.webClient = WebClient.create(rxVertx,
-//                new WebClientOptions().
-//                        setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36")
-//                        .setMaxPoolSize(10)
-//                        .setLogActivity(false));
-
-        // TODO: instantiate proxy to service.
-
     }
 
     @Override

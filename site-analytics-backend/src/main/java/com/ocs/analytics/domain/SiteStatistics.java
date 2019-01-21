@@ -2,9 +2,14 @@ package com.ocs.analytics.domain;
 
 import io.vertx.codegen.annotations.DataObject;
 import io.vertx.core.json.JsonObject;
+import io.vertx.serviceproxy.ServiceException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.Period;
+import java.time.format.DateTimeFormatter;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
@@ -18,6 +23,11 @@ import java.util.stream.Collectors;
  */
 @DataObject
 public class SiteStatistics implements JsonDomainObject {
+    private static final Logger LOGGER = LoggerFactory.getLogger(SiteStatistics.class);
+
+    private static final String WM_EXPECTED_FORMAT = "yyyyMMdd";
+
+    private static final DateTimeFormatter wmFormatter = DateTimeFormatter.ofPattern(WM_EXPECTED_FORMAT);
 
     // Should be a TreeSet but Vert.x doesn't allow a TreeSet as a field.
     private final Set<SiteStatistic> statistics;
@@ -68,13 +78,26 @@ public class SiteStatistics implements JsonDomainObject {
      * @return an instance of this class for fluent API building.
      */
     public SiteStatistics addMeasurementBasedOnRecord(String csv) {
-        // Validate that the record contains specific values.
+        LOGGER.debug("Received: {}", csv);
+        String[] contents = csv.split(",");
+        if (contents.length < 9) {
+            throw new IllegalArgumentException("Did not expect this content: " + csv);
+        }
 
-        // Extract hour of day
+        // Expecting year-month-day in second position
+        String day = contents[1];
+        LocalDateTime ldt = LocalDateTime.parse(day, wmFormatter);
 
-        // Find the corresponding SiteStatistic (if not found, throw an exception)
-        // Map the weather measurement based on the csv.
-        // Add the weathermeasurement to the SiteStatistic.
+        // Expecting the third position to contain a hour of day.
+        int hour = Integer.valueOf(contents[2]);
+
+        HourOfDay hourOfDay = HourOfDay.of(ldt.getYear(), ldt.getMonthValue(), ldt.getDayOfMonth(), hour - 1);
+
+        // Find the corresponding SiteStatistic (if not found, throw an exception) based on the hour of day (not all hours may be present) taking the difference in hour notation into account
+        SiteStatistic s = this.statistics.stream().filter(siteStatistic -> siteStatistic.getHourOfDay().equals(hourOfDay)).findFirst().orElseThrow(() -> new ServiceException(500, "Unable to find matching hour of day for record: " + csv));
+
+        WeatherMeasurement weatherMeasurement = WeatherMeasurement.from(contents);
+        s.weatherMeasurement(weatherMeasurement);
         return this;
     }
 

@@ -4,12 +4,16 @@ import com.ocs.analytics.domain.HistoricalParameters;
 import com.ocs.analytics.domain.SiteStatistic;
 import com.ocs.analytics.domain.SiteStatistics;
 import com.ocs.analytics.domain.SiteStatisticsService;
+import io.reactivex.Observable;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.reactivex.core.MultiMap;
 import io.vertx.reactivex.core.Vertx;
+import io.vertx.reactivex.core.buffer.Buffer;
+import io.vertx.reactivex.core.parsetools.RecordParser;
+import io.vertx.reactivex.ext.web.client.HttpResponse;
 import io.vertx.reactivex.ext.web.client.WebClient;
 import io.vertx.serviceproxy.ServiceException;
 import org.slf4j.Logger;
@@ -27,6 +31,7 @@ public class SiteStatisticsServiceImpl implements SiteStatisticsService {
     private static final Logger LOGGER = LoggerFactory.getLogger(SiteStatisticsServiceImpl.class);
     private static final String WEATHER_BASE_URL = "projects.knmi.nl";
     private static final String WEATHER_REQUEST_PER_HOUR_URL = "/klimatologie/uurgegevens/getdata_uur.cgi";
+    private static final String IMPORT_PATTERN = "^[0-9]{3},[0-9]{8},\\d*,\\d*,\\d*,\\d*,\\d*,\\d*,\\d*$";
 
     private WebClient webClient;
     private Vertx rxVertx;
@@ -55,6 +60,7 @@ public class SiteStatisticsServiceImpl implements SiteStatisticsService {
         String stations = "260"; // Represents "De Bilt"
         HistoricalParameters parameters = HistoricalParameters.with("nl", first.year(), first.month(),
                 first.day(), last.year(), last.month(), last.day(), first.hour(), last.hour(), stations, "T10N", "DR", "RH", "U", "R", "S");
+
         // Create the map to be sent to the website.
         MultiMap form = parameters.asMultiMapForForm();
 
@@ -66,12 +72,42 @@ public class SiteStatisticsServiceImpl implements SiteStatisticsService {
                 .putHeader("Content-Type", "application/x-www-form-urlencoded")
                 .rxSendForm(form)
                 .doOnError(throwable -> LOGGER.error("Something went wrong while sending a form.", throwable))
-                .subscribe(response -> {
-                    LOGGER.debug("Received response: {}", response.statusMessage());
-                    LOGGER.debug("Received body of response:\n{}", response.body().toString());
-                    // TODO: call SiteStatistics.addMeasurementBasedOnCsv(...)
-
-                    result.handle(Future.succeededFuture(statistics));
-                }, throwable -> result.handle(Future.failedFuture(new ServiceException(10, throwable.getMessage()))));
+                .doOnSuccess(response -> LOGGER.debug("Received response: {}", response.statusMessage()))
+//                .doOnSuccess(response -> LOGGER.debug("Received body of response:\n{}", response.body().toString()))
+                .flatMapObservable(response -> this.processResponse(statistics, response))
+                .subscribe(siteStatistics -> {
+                            LOGGER.debug("In subscribe of the processing.");
+//                            result.handle(Future.succeededFuture(siteStatistics));
+                        },
+                        throwable -> result.handle(Future.failedFuture(new ServiceException(10, throwable.getMessage()))),
+                        () -> {
+                            LOGGER.debug("Complete result:\n{}", statistics.toJson().encodePrettily());
+                            result.handle(Future.succeededFuture(statistics));
+                        });
     }
+
+    private Observable<SiteStatistics> processResponse(SiteStatistics statistics, HttpResponse<Buffer> response) {
+        if (response.statusCode() == 200) {
+            return RecordParser
+                    .newDelimited("\n", Observable.just(response.body()))
+                    .toObservable()
+                    .map(buffer -> buffer.toString())
+                    .map(string -> string.replaceAll("\\s", ""))
+                    .filter(string -> {
+                        LOGGER.debug("String to process: {}, trimmed: {}", string);
+//                        LOGGER.debug("Matches filter: {}", string.trim().matches(IMPORT_PATTERN));
+                        return string.matches(IMPORT_PATTERN);
+                    })
+                    .doOnComplete(() -> LOGGER.debug("Did we complete processing?"))
+                    .map(string -> {
+                        LOGGER.debug("In mapping portion to add statistics.");
+                        return statistics.addMeasurementBasedOnRecord(string);
+                    });
+
+        } else {
+            return Observable.error(() -> new ServiceException(response.statusCode(), response.statusMessage()));
+        }
+
+    }
+
 }
