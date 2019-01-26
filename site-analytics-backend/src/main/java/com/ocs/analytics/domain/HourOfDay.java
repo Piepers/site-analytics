@@ -4,8 +4,6 @@ import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import io.vertx.codegen.annotations.DataObject;
 import io.vertx.core.json.JsonObject;
 
-import java.util.Comparator;
-
 /**
  * The hour, day, month and year in the analytics data. Is used to sort and provide a way to match the statistics data
  * to the data that comes back from the weather station.

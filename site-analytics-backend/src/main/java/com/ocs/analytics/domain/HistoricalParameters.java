@@ -5,7 +5,6 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.reactivex.core.MultiMap;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -18,16 +17,8 @@ import java.util.stream.Collectors;
  * @author Bas Piepers
  */
 @DataObject
-// TODO: validate that start and end is not more than a year and make objects of the fields and/or work with java time.
 public class HistoricalParameters {
     private final String language;
-    //    private final Year startYear;
-//    private final Year endYear;
-//    private final Month startMonth;
-//    private final Month endMonth;
-//    private final MonthDay startDay;
-//    private final MonthDay endDay;
-//    private final
     private final int startYear;
     private final int startMonth;
     private final int startDay;
@@ -82,17 +73,27 @@ public class HistoricalParameters {
     }
 
     /**
-     * Assumes that the hours are starting at 0 for midnight and end at 23 and so it will add one hour because the
-     * web site where the values are taken from has a 1 to 24 hour format.
+     * A fixed set of parameters specifically so that they match what the {@link WeatherMeasurement} expects (and in
+     * which order). Fixed station that corresponds to "De Bilt" in The Netherlands.
+     * <p>
+     * Validates that no more than one year of data is requested.
+     *
+     * @param startYear,  the year from which the values must start to return.
+     * @param startMonth, the first month of the values to take
+     * @param startDay,   the first day of the values to take
+     * @param endYear,    the end year of the values to take
+     * @param endMonth,   the end month of the values to take
+     * @param endDay,     the end day of the values to take
+     * @param startHour,  the start hour of the values to take. Adds 1 to the value because we assume the parameter to
+     *                    use a 0 to 23 hour format (while the site we get the data from has a 1 to 24 format).
+     * @param endHour,    the end hour of the values to take. Also adds 1 to the value for the same reason.
+     * @return an instance of historical parameters specifically for the weather measurements we use.
      */
-    public static final HistoricalParameters with(String language, int startYear, int startMonth, int startDay, int endYear, int endMonth,
-                                                  int endDay, int startHour, int endHour, String stations, String... variables) {
-        HistoricalParameters h = new HistoricalParameters(language, startYear, startMonth, startDay, endYear, endMonth, endDay, startHour + 1, endHour + 1, stations, variables);
-
+    public static final HistoricalParameters forWeatherMeasurement(int startYear, int startMonth, int startDay, int endYear, int endMonth,
+                                                                   int endDay, int startHour, int endHour) {
+        HistoricalParameters h = new HistoricalParameters("nl", startYear, startMonth, startDay, endYear, endMonth, endDay, startHour + 1, endHour + 1, "260", "T", "T10N", "SQ", "DR", "RH", "N", "U", "M", "R", "S", "O", "Y");
         h.validate();
-
         return h;
-
     }
 
     /**
@@ -194,14 +195,6 @@ public class HistoricalParameters {
 
     public String getStations() {
         return stations;
-    }
-
-    public void addVariable(String variable) {
-        if (Objects.isNull(this.variables)) {
-            this.variables = new ArrayList<>();
-        }
-
-        this.variables.add(variable);
     }
 
     @Override

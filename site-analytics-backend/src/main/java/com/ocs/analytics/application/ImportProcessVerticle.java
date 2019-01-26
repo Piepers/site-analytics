@@ -62,7 +62,6 @@ public class ImportProcessVerticle extends AbstractVerticle {
                             .doFinally(() -> this.cleanup(fileUpload.getUploadedFileName()))
                             .doOnComplete(() -> LOGGER.debug("Successfully processed the file, added {} items to the site statistics.", siteStatistics.getStatistics().size()))
                             .doOnComplete(() -> this.enrichStatistics(siteStatistics, message))
-                            .doOnError(throwable -> LOGGER.error("Something failed while processing the imported file.", throwable))
                             .doOnError(throwable -> message.fail(1, "Something went wrong " + throwable.getMessage()))
                             .subscribe();
 
@@ -74,7 +73,7 @@ public class ImportProcessVerticle extends AbstractVerticle {
         this.siteStatisticsService
                 .rxEnrichAnalytics(siteStatistics)
                 .subscribe(statistics -> message.reply(new JsonObject().put("result", "ok")),
-                        throwable -> message.fail(2, "Something went wrong while enriching the site statistics."));
+                        throwable -> message.fail(2, "Something went wrong while enriching the site statistics: " + throwable.getMessage()));
     }
 
 

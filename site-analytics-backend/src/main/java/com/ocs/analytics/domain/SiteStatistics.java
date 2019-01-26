@@ -2,14 +2,13 @@ package com.ocs.analytics.domain;
 
 import io.vertx.codegen.annotations.DataObject;
 import io.vertx.core.json.JsonObject;
-import io.vertx.serviceproxy.ServiceException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.Period;
 import java.time.format.DateTimeFormatter;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
@@ -78,26 +77,34 @@ public class SiteStatistics implements JsonDomainObject {
      * @return an instance of this class for fluent API building.
      */
     public SiteStatistics addMeasurementBasedOnRecord(String csv) {
-        LOGGER.debug("Received: {}", csv);
         String[] contents = csv.split(",");
-        if (contents.length < 9) {
-            throw new IllegalArgumentException("Did not expect this content: " + csv);
-        }
+        WeatherMeasurement weatherMeasurement = WeatherMeasurement.from(contents);
 
         // Expecting year-month-day in second position
-        String day = contents[1];
-        LocalDateTime ldt = LocalDateTime.parse(day, wmFormatter);
+        String date = contents[1];
+
+        int year = Integer.valueOf(date.substring(0, 4));
+        int month = Integer.valueOf(date.substring(4, 6));
+        int day = Integer.valueOf(date.substring(6));
 
         // Expecting the third position to contain a hour of day.
-        int hour = Integer.valueOf(contents[2]);
+        int hour = Integer.valueOf(contents[2]) - 1;
 
-        HourOfDay hourOfDay = HourOfDay.of(ldt.getYear(), ldt.getMonthValue(), ldt.getDayOfMonth(), hour - 1);
+        HourOfDay hourOfDay = HourOfDay.of(year, month, day, hour);
 
-        // Find the corresponding SiteStatistic (if not found, throw an exception) based on the hour of day (not all hours may be present) taking the difference in hour notation into account
-        SiteStatistic s = this.statistics.stream().filter(siteStatistic -> siteStatistic.getHourOfDay().equals(hourOfDay)).findFirst().orElseThrow(() -> new ServiceException(500, "Unable to find matching hour of day for record: " + csv));
+        // Find the corresponding SiteStatistic (if not found, we assume that no statistics exist) based on the hour of day (not all hours may be present) taking the difference in hour notation into account
+        Optional<SiteStatistic> s = this.statistics
+                .stream()
+                .filter(siteStatistic -> siteStatistic
+                        .getHourOfDay()
+                        .equals(hourOfDay))
+                .findFirst();
 
-        WeatherMeasurement weatherMeasurement = WeatherMeasurement.from(contents);
-        s.weatherMeasurement(weatherMeasurement);
+        if (s.isPresent()) {
+            s.get().weatherMeasurement(weatherMeasurement);
+        } else {
+            LOGGER.debug("Did not find a corresponding site statistics for year-month-day-hour: {}", hourOfDay.toString());
+        }
         return this;
     }
 

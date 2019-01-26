@@ -1,9 +1,6 @@
 package com.ocs.analytics.infrastructure;
 
-import com.ocs.analytics.domain.HistoricalParameters;
-import com.ocs.analytics.domain.SiteStatistic;
-import com.ocs.analytics.domain.SiteStatistics;
-import com.ocs.analytics.domain.SiteStatisticsService;
+import com.ocs.analytics.domain.*;
 import io.reactivex.Observable;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
@@ -31,7 +28,6 @@ public class SiteStatisticsServiceImpl implements SiteStatisticsService {
     private static final Logger LOGGER = LoggerFactory.getLogger(SiteStatisticsServiceImpl.class);
     private static final String WEATHER_BASE_URL = "projects.knmi.nl";
     private static final String WEATHER_REQUEST_PER_HOUR_URL = "/klimatologie/uurgegevens/getdata_uur.cgi";
-    private static final String IMPORT_PATTERN = "^[0-9]{3},[0-9]{8},\\d*,\\d*,\\d*,\\d*,\\d*,\\d*,\\d*$";
 
     private WebClient webClient;
     private Vertx rxVertx;
@@ -54,12 +50,11 @@ public class SiteStatisticsServiceImpl implements SiteStatisticsService {
         LOGGER.debug("Received first statistic of {}.\nLast statistic of {}.", first, last);
 
         if (statistics.spansMoreThanAYear()) {
-            throw new ServiceException(500, "This service does not allow a longer time range of more than 12 months for the site-statistics.");
+            throw new ServiceException(500, "This service does not allow a longer time range than 12 months for the site-statistics.");
         }
 
-        String stations = "260"; // Represents "De Bilt"
-        HistoricalParameters parameters = HistoricalParameters.with("nl", first.year(), first.month(),
-                first.day(), last.year(), last.month(), last.day(), first.hour(), last.hour(), stations, "T10N", "DR", "RH", "U", "R", "S");
+        HistoricalParameters parameters = HistoricalParameters.forWeatherMeasurement(first.year(), first.month(),
+                first.day(), last.year(), last.month(), last.day(), first.hour(), last.hour());
 
         // Create the map to be sent to the website.
         MultiMap form = parameters.asMultiMapForForm();
@@ -72,42 +67,31 @@ public class SiteStatisticsServiceImpl implements SiteStatisticsService {
                 .putHeader("Content-Type", "application/x-www-form-urlencoded")
                 .rxSendForm(form)
                 .doOnError(throwable -> LOGGER.error("Something went wrong while sending a form.", throwable))
-                .doOnSuccess(response -> LOGGER.debug("Received response: {}", response.statusMessage()))
-//                .doOnSuccess(response -> LOGGER.debug("Received body of response:\n{}", response.body().toString()))
-                .flatMapObservable(response -> this.processResponse(statistics, response))
-                .subscribe(siteStatistics -> {
-                            LOGGER.debug("In subscribe of the processing.");
-//                            result.handle(Future.succeededFuture(siteStatistics));
-                        },
-                        throwable -> result.handle(Future.failedFuture(new ServiceException(10, throwable.getMessage()))),
+                .flatMapObservable(response -> this.processResponse(response))
+                .doOnComplete(() -> LOGGER.debug("Completed processing the response"))
+                .subscribe(string -> this.processOneRecord(statistics, string),
+                        throwable -> result.handle(Future.failedFuture(throwable)),
                         () -> {
-                            LOGGER.debug("Complete result:\n{}", statistics.toJson().encodePrettily());
                             result.handle(Future.succeededFuture(statistics));
                         });
     }
 
-    private Observable<SiteStatistics> processResponse(SiteStatistics statistics, HttpResponse<Buffer> response) {
+    private Observable<String> processResponse(HttpResponse<Buffer> response) {
         if (response.statusCode() == 200) {
+            LOGGER.debug("Response received {}", response.statusMessage());
             return RecordParser
                     .newDelimited("\n", Observable.just(response.body()))
                     .toObservable()
                     .map(buffer -> buffer.toString())
                     .map(string -> string.replaceAll("\\s", ""))
-                    .filter(string -> {
-                        LOGGER.debug("String to process: {}, trimmed: {}", string);
-//                        LOGGER.debug("Matches filter: {}", string.trim().matches(IMPORT_PATTERN));
-                        return string.matches(IMPORT_PATTERN);
-                    })
-                    .doOnComplete(() -> LOGGER.debug("Did we complete processing?"))
-                    .map(string -> {
-                        LOGGER.debug("In mapping portion to add statistics.");
-                        return statistics.addMeasurementBasedOnRecord(string);
-                    });
-
+                    .filter(string -> string.matches(WeatherMeasurement.RECORD_PATTERN));
         } else {
             return Observable.error(() -> new ServiceException(response.statusCode(), response.statusMessage()));
         }
 
     }
 
+    private SiteStatistics processOneRecord(SiteStatistics siteStatistics, String record) {
+        return siteStatistics.addMeasurementBasedOnRecord(record);
+    }
 }

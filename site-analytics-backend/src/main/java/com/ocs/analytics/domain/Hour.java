@@ -35,6 +35,21 @@ public class Hour {
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Hour hour = (Hour) o;
+
+        return value == hour.value;
+    }
+
+    @Override
+    public int hashCode() {
+        return value;
+    }
+
+    @Override
     public String toString() {
         return "Hour{" +
                 "value=" + value +
