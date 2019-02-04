@@ -22,7 +22,6 @@ import org.slf4j.LoggerFactory;
 public class ImportProcessVerticle extends AbstractVerticle {
     private static final Logger LOGGER = LoggerFactory.getLogger(ImportProcessVerticle.class);
     private static final String IMPORT_PATTERN = "^[0-9]{10},\\d+?,\\d+?,\\d+?,\\d+?$";
-    //    private WebClient webClient;
     private io.vertx.reactivex.core.Vertx rxVertx;
     private SiteStatisticsService siteStatisticsService;
 

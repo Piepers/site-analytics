@@ -6,7 +6,6 @@ import io.reactivex.Single;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
-import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
 import io.vertx.reactivex.core.AbstractVerticle;
 import io.vertx.reactivex.core.buffer.Buffer;
@@ -18,7 +17,6 @@ import io.vertx.reactivex.ext.web.templ.FreeMarkerTemplateEngine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 public class HttpServerVerticle extends AbstractVerticle {
@@ -41,17 +39,7 @@ public class HttpServerVerticle extends AbstractVerticle {
 
     @Override
     public void start(Future<Void> future) {
-//        Router router = Router.router(vertx);
-//        router.route().handler(BodyHandler.create().setUploadsDirectory(".vertx/file-uploads"));
-//
-//        router.post("/import").handler(this::importHandler);
-//
-//        StaticHandler staticHandler = StaticHandler.create();
-//        // TODO: remove in production
-//        staticHandler.setCachingEnabled(false);
-//        router.route("/static/*").handler(staticHandler);
-//        router.route("/").handler(this::indexHandler);
-//
+
         Router router = Router.router(vertx);
 
         // Enable multipart form data parsing
@@ -66,10 +54,10 @@ public class HttpServerVerticle extends AbstractVerticle {
         router.post("/import").handler(this::importHandler);
 
         Router subRouter = Router.router(vertx);
-        subRouter.route(HttpMethod.GET, "/test-trigger").handler(this::triggerPostRequest);
         router.mountSubRouter("/api", subRouter);
 
-        this.vertx.createHttpServer()
+        this.vertx
+                .createHttpServer()
                 .requestHandler(router::accept)
                 .rxListen(this.port)
                 .subscribe(result -> {
@@ -79,17 +67,6 @@ public class HttpServerVerticle extends AbstractVerticle {
                     LOGGER.error("Something went wrong");
                     future.fail(throwable);
                 });
-    }
-
-    // FIXME: remove - is just to test whether we can send and receive something to the KNMI web service that holds historical data.
-    private void triggerPostRequest(RoutingContext routingContext) {
-        vertx.eventBus().publish("trigger-test", new JsonObject());
-        routingContext
-                .response()
-                .setStatusCode(200)
-                .putHeader("Content-Type", "application/json; charset=UTF-8")
-                .end(new JsonObject().put("message", "Ok")
-                        .encode(), StandardCharsets.UTF_8.name());
     }
 
     private void importHandler(RoutingContext routingContext) {
@@ -115,7 +92,6 @@ public class HttpServerVerticle extends AbstractVerticle {
                     // Just return with a message that we are not really going to use (could have used a completable too).
                     return Single.just(new JsonObject().put("message", "ok"));
                 })
-                // FIXME: do this differently.
                 .toList()
                 .flatMap(jsonObjects -> this.renderIndex(routingContext.put("importing", true)))
                 // But return immediately (don't wait for the file(-s) to be processed).
