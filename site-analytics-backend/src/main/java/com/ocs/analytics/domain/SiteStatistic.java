@@ -49,7 +49,7 @@ public class SiteStatistic implements Comparable<SiteStatistic>, JsonDomainObjec
         this.users = jsonObject.getLong("users");
         this.newUsers = jsonObject.getLong("newUsers");
         this.sessions = jsonObject.getLong("sessions");
-        this.weatherMeasurements = Objects.nonNull(jsonObject.getJsonObject("weatherMeasurement")) ? new WeatherMeasurement(jsonObject.getJsonObject("weatherMeasurements")) : null;
+        this.weatherMeasurements = Objects.nonNull(jsonObject.getJsonObject("weatherMeasurements")) ? new WeatherMeasurement(jsonObject.getJsonObject("weatherMeasurements")) : null;
     }
 
     /**

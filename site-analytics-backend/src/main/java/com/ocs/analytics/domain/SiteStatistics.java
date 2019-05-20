@@ -103,7 +103,7 @@ public class SiteStatistics implements JsonDomainObject {
         if (s.isPresent()) {
             s.get().weatherMeasurement(weatherMeasurement);
         } else {
-            LOGGER.debug("Did not find a corresponding site statistics for year-month-day-hour: {}", hourOfDay.toString());
+            LOGGER.trace("Did not find a corresponding site statistics for year-month-day-hour: {}", hourOfDay.toString());
         }
         return this;
     }

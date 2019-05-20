@@ -71,9 +71,7 @@ public class SiteStatisticsServiceImpl implements SiteStatisticsService {
                 .doOnComplete(() -> LOGGER.debug("Completed processing the response"))
                 .subscribe(string -> this.processOneRecord(statistics, string),
                         throwable -> result.handle(Future.failedFuture(throwable)),
-                        () -> {
-                            result.handle(Future.succeededFuture(statistics));
-                        });
+                        () -> result.handle(Future.succeededFuture(statistics)));
     }
 
     private Observable<String> processResponse(HttpResponse<Buffer> response) {

@@ -71,7 +71,7 @@ public class ImportProcessVerticle extends AbstractVerticle {
     private void enrichStatistics(SiteStatistics siteStatistics, Message<JsonObject> message) {
         this.siteStatisticsService
                 .rxEnrichAnalytics(siteStatistics)
-                .subscribe(statistics -> message.reply(new JsonObject().put("result", "ok")),
+                .subscribe(result -> message.reply(result.toJson()),
                         throwable -> message.fail(2, "Something went wrong while enriching the site statistics: " + throwable.getMessage()));
     }
 

@@ -12,7 +12,10 @@ import io.vertx.reactivex.core.buffer.Buffer;
 import io.vertx.reactivex.ext.web.Router;
 import io.vertx.reactivex.ext.web.RoutingContext;
 import io.vertx.reactivex.ext.web.handler.BodyHandler;
+import io.vertx.reactivex.ext.web.handler.SessionHandler;
 import io.vertx.reactivex.ext.web.handler.StaticHandler;
+
+import io.vertx.reactivex.ext.web.sstore.LocalSessionStore;
 import io.vertx.reactivex.ext.web.templ.FreeMarkerTemplateEngine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,8 +26,9 @@ public class HttpServerVerticle extends AbstractVerticle {
     private static final Logger LOGGER = LoggerFactory.getLogger(HttpServerVerticle.class);
 
     private final FreeMarkerTemplateEngine templateEngine = FreeMarkerTemplateEngine.create();
-
+    private LocalSessionStore sessionStore;
     private int port;
+    private io.vertx.reactivex.core.Vertx rxVertx;
 
     @Override
     public void init(Vertx vertx, Context context) {
@@ -35,6 +39,8 @@ public class HttpServerVerticle extends AbstractVerticle {
                         .config()
                         .getJsonObject("http_server"))
                 .map(o -> o.getInteger("port")).orElse(5000);
+        this.rxVertx = new io.vertx.reactivex.core.Vertx(vertx);
+        sessionStore = LocalSessionStore.create(rxVertx);
     }
 
     @Override
@@ -44,10 +50,10 @@ public class HttpServerVerticle extends AbstractVerticle {
 
         // Enable multipart form data parsing
         router.route().handler(BodyHandler.create().setUploadsDirectory(".vertx/file-uploads"));
+        SessionHandler sessionHandler = SessionHandler.create(sessionStore);
 
         StaticHandler staticHandler = StaticHandler.create();
-//         TODO: remove in production
-        staticHandler.setCachingEnabled(false);
+        router.route().handler(sessionHandler::handle);
         router.route("/static/*").handler(staticHandler);
         router.route("/").handler(this::indexHandler);
 
@@ -66,6 +72,13 @@ public class HttpServerVerticle extends AbstractVerticle {
                 }, throwable -> {
                     LOGGER.error("Something went wrong");
                     future.fail(throwable);
+                });
+
+        // Passes the weather data to the client.
+        this.rxVertx
+                .eventBus()
+                .<JsonObject>consumer("weather-data-enriched", message -> {
+
                 });
     }
 
@@ -87,13 +100,14 @@ public class HttpServerVerticle extends AbstractVerticle {
                                     // TODO: implement the response of the processing.
                                     message
                                             .body()
-                                            .encode()),
+                                            .encodePrettily()),
                                     throwable -> LOGGER.error("Something went wrong while importing the file.", throwable));
                     // Just return with a message that we are not really going to use (could have used a completable too).
                     return Single.just(new JsonObject().put("message", "ok"));
                 })
                 .toList()
-                .flatMap(jsonObjects -> this.renderIndex(routingContext.put("importing", true)))
+                .doOnSuccess(jsonObjects -> routingContext.session().put("importing", true))
+                .flatMap(jsonObjects -> this.renderIndex(routingContext))
                 // But return immediately (don't wait for the file(-s) to be processed).
                 .subscribe(result -> routingContext.response().putHeader("Content-Type", "text/html").end(result),
                         throwable -> routingContext.fail(throwable));
