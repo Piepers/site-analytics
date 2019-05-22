@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import io.vertx.codegen.annotations.DataObject;
 import io.vertx.core.json.JsonObject;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
@@ -20,7 +21,7 @@ import java.util.UUID;
  * @author Bas Piepers
  */
 @DataObject
-public class SiteStatistic implements Comparable<SiteStatistic>, JsonDomainObject {
+public class SiteStatistic implements Comparable<SiteStatistic>, JsonDomainObject, Serializable {
     private static final String EXPECTED_FORMAT = "yyyyMMddHH";
 
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern(EXPECTED_FORMAT);

@@ -1,25 +1,29 @@
 package com.ocs.analytics.application;
 
 import com.ocs.analytics.domain.FileUpload;
+import com.ocs.analytics.domain.SiteStatistics;
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.reactivex.core.AbstractVerticle;
 import io.vertx.reactivex.core.buffer.Buffer;
 import io.vertx.reactivex.ext.web.Router;
 import io.vertx.reactivex.ext.web.RoutingContext;
+import io.vertx.reactivex.ext.web.Session;
 import io.vertx.reactivex.ext.web.handler.BodyHandler;
+import io.vertx.reactivex.ext.web.handler.CookieHandler;
 import io.vertx.reactivex.ext.web.handler.SessionHandler;
 import io.vertx.reactivex.ext.web.handler.StaticHandler;
-
 import io.vertx.reactivex.ext.web.sstore.LocalSessionStore;
 import io.vertx.reactivex.ext.web.templ.FreeMarkerTemplateEngine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Objects;
 import java.util.Optional;
 
 public class HttpServerVerticle extends AbstractVerticle {
@@ -53,6 +57,7 @@ public class HttpServerVerticle extends AbstractVerticle {
         SessionHandler sessionHandler = SessionHandler.create(sessionStore);
 
         StaticHandler staticHandler = StaticHandler.create();
+        router.route().handler(CookieHandler.create());
         router.route().handler(sessionHandler::handle);
         router.route("/static/*").handler(staticHandler);
         router.route("/").handler(this::indexHandler);
@@ -60,6 +65,7 @@ public class HttpServerVerticle extends AbstractVerticle {
         router.post("/import").handler(this::importHandler);
 
         Router subRouter = Router.router(vertx);
+        subRouter.get("/statistics/current").handler(this::getLatestSiteStatistics);
         router.mountSubRouter("/api", subRouter);
 
         this.vertx
@@ -82,6 +88,18 @@ public class HttpServerVerticle extends AbstractVerticle {
                 });
     }
 
+    private void getLatestSiteStatistics(RoutingContext routingContext) {
+        routingContext.response().putHeader("Content-Type", "application/json");
+        Session session = routingContext.session();
+        LOGGER.debug("The session id is now: {}", session.id());
+        SiteStatistics ss = routingContext.session().get("sitestatistics");
+        if (Objects.isNull(ss)) {
+            routingContext.response().end(new JsonObject().put("result", "none").encode());
+        } else {
+            routingContext.response().end(ss.toJson().encode());
+        }
+    }
+
     private void importHandler(RoutingContext routingContext) {
         // Offload the processing of the file to another Verticle so that we can respond immediately.
         Observable
@@ -96,11 +114,10 @@ public class HttpServerVerticle extends AbstractVerticle {
                     vertx
                             .eventBus()
                             .<JsonObject>rxSend("file-upload", jsonObject)
-                            .subscribe(message -> LOGGER.debug("Imported response: {}",
-                                    // TODO: implement the response of the processing.
-                                    message
-                                            .body()
-                                            .encodePrettily()),
+                            .doOnSuccess(message -> LOGGER.debug("An import has been processed with {} items.", message.body().getJsonArray("statistics", new JsonArray()).size()))
+                            .flatMap(message -> Single.just(new SiteStatistics(message.body())))
+                            .doOnSuccess(siteStatistics -> routingContext.session().put("importing", false))
+                            .subscribe(siteStatistics -> routingContext.session().put("sitestatistics", siteStatistics),
                                     throwable -> LOGGER.error("Something went wrong while importing the file.", throwable));
                     // Just return with a message that we are not really going to use (could have used a completable too).
                     return Single.just(new JsonObject().put("message", "ok"));

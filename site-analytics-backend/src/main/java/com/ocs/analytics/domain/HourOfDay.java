@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import io.vertx.codegen.annotations.DataObject;
 import io.vertx.core.json.JsonObject;
 
+import java.io.Serializable;
+
 /**
  * The hour, day, month and year in the analytics data. Is used to sort and provide a way to match the statistics data
  * to the data that comes back from the weather station.
@@ -11,7 +13,7 @@ import io.vertx.core.json.JsonObject;
  * @author Bas Piepers
  */
 @DataObject
-public class HourOfDay {
+public class HourOfDay implements Serializable {
     @JsonUnwrapped(prefix = "year.")
     private Year year;
     @JsonUnwrapped(prefix = "month.")

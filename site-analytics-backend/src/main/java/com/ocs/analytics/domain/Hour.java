@@ -3,6 +3,8 @@ package com.ocs.analytics.domain;
 import io.vertx.codegen.annotations.DataObject;
 import io.vertx.core.json.JsonObject;
 
+import java.io.Serializable;
+
 /**
  * Represents the hour of day as a Json object. Can never be higher than 24 and must always be above 0. 0 is twelve o'
  * clock midnight.
@@ -10,7 +12,7 @@ import io.vertx.core.json.JsonObject;
  * @author Bas Piepers
  */
 @DataObject
-public class Hour {
+public class Hour implements Serializable {
 
     private int value;
 

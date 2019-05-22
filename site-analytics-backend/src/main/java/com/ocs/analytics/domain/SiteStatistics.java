@@ -5,6 +5,7 @@ import io.vertx.core.json.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.Period;
 import java.time.format.DateTimeFormatter;
@@ -21,7 +22,7 @@ import java.util.stream.Collectors;
  * @author Bas Piepers
  */
 @DataObject
-public class SiteStatistics implements JsonDomainObject {
+public class SiteStatistics implements JsonDomainObject, Serializable {
     private static final Logger LOGGER = LoggerFactory.getLogger(SiteStatistics.class);
 
     private static final String WM_EXPECTED_FORMAT = "yyyyMMdd";

@@ -3,11 +3,12 @@ package com.ocs.analytics.domain;
 import io.vertx.codegen.annotations.DataObject;
 import io.vertx.core.json.JsonObject;
 
+import java.io.Serializable;
 import java.time.Month;
 import java.time.MonthDay;
 
 @DataObject
-public class Day {
+public class Day implements Serializable {
 
     private int value;
 

@@ -5,6 +5,7 @@ import io.vertx.core.json.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.Serializable;
 import java.util.Arrays;
 
 /**
@@ -18,7 +19,7 @@ import java.util.Arrays;
  * @author Bas Piepers
  */
 @DataObject
-public class WeatherMeasurement implements JsonDomainObject {
+public class WeatherMeasurement implements JsonDomainObject, Serializable {
     private static final Logger LOGGER = LoggerFactory.getLogger(WeatherMeasurement.class);
     // The pattern we assume the weathermeasurement contains. 15 columns of numerical data where the second  column contains a date pattern.
     public static final String RECORD_PATTERN = "^[0-9]{3},[0-9]{8},\\d*,\\d*,\\d*,\\d*,\\d*,\\d*,\\d*,\\d*,\\d*,\\d*,\\d*,\\d*,\\d*$";

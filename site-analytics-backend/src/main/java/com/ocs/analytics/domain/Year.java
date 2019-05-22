@@ -3,13 +3,15 @@ package com.ocs.analytics.domain;
 import io.vertx.codegen.annotations.DataObject;
 import io.vertx.core.json.JsonObject;
 
+import java.io.Serializable;
+
 /**
  * The years that we can pass around as Json objects throughout the system.
  *
  * @author Bas Piepers
  */
 @DataObject
-public class Year {
+public class Year implements Serializable {
 
     private int value;
 
