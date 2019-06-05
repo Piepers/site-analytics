@@ -29,7 +29,7 @@
 
                 // The data for our dataset
                 data: {
-                    labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
+                    labels: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday','Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday','Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday','Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday','Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday','Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday','Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday','Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday','Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday','Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday','Monday', 'Tuesday'],
                     datasets: [{
                         label: 'Visits',
                         fill: false,
@@ -42,12 +42,13 @@
                             fill: false,
                             backgroundColor: 'rgb(79, 114, 255)',
                             borderColor: 'rgb(30, 45, 255)',
-                            data: [10, 11, 9, 15, 18, 19, 15]
+                            data: [10, 12, 13, 15, 90, 50, 23,10, 12, 13, 15, 90, 50, 23,10, 12, 13, 15, 90, 50, 23,10, 12, 13, 15, 90, 50, 23,10, 12, 13, 15, 90, 50, 23,10, 12, 13, 15, 90, 50, 23,10, 12, 13, 15, 90, 50, 23,10, 12, 13, 15, 90, 50, 23,10, 12, 13, 15, 90, 50, 23,10, 12, 13, 15, 90, 50, 23,11,12]
                         }]
                 },
 
                 // Configuration options go here
-                options: {}
+                options: {
+                }
             });
         </script>
     </div>

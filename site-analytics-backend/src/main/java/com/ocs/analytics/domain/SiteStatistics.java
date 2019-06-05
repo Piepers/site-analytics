@@ -9,6 +9,7 @@ import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.Period;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
@@ -29,7 +30,6 @@ public class SiteStatistics implements JsonDomainObject, Serializable {
 
     private static final DateTimeFormatter wmFormatter = DateTimeFormatter.ofPattern(WM_EXPECTED_FORMAT);
 
-    // Should be a TreeSet but Vert.x doesn't allow a TreeSet as a field.
     private final Set<SiteStatistic> statistics;
 
     public SiteStatistics(TreeSet<SiteStatistic> statistics) {
@@ -52,6 +52,14 @@ public class SiteStatistics implements JsonDomainObject, Serializable {
         return statistics;
     }
 
+    public List<SiteStatistic> getAsSortedList() {
+        return statistics
+                .stream()
+                .sorted()
+                .collect(Collectors
+                        .toList());
+    }
+
     public SiteStatistics addStatistic(SiteStatistic siteStatistic) {
         this.statistics.add(siteStatistic);
         return this;
@@ -69,7 +77,8 @@ public class SiteStatistics implements JsonDomainObject, Serializable {
 
     /**
      * Based on a CSV record, extract the hour-of-day and find the corresponding {@link SiteStatistic}. Map the CSV
-     * record to a {@link WeatherMeasurement} instance and add it to the {@link SiteStatistic}.
+     * record to a {@link WeatherMeasurement} instance and add it to the {@link SiteStatistic}. If no corresponding
+     * {@link SiteStatistic} was found, create one with 0 values and add the weathermeasurement to it.
      * <p>
      * Naive implementation: probably better to allow a lookup by the time portions rather than iterating the Set over
      * and over again.
@@ -104,7 +113,8 @@ public class SiteStatistics implements JsonDomainObject, Serializable {
         if (s.isPresent()) {
             s.get().weatherMeasurement(weatherMeasurement);
         } else {
-            LOGGER.trace("Did not find a corresponding site statistics for year-month-day-hour: {}", hourOfDay.toString());
+            LOGGER.trace("Did not find a corresponding site statistics for year-month-day-hour: {}. Creating new one with 0 values.", hourOfDay.toString());
+            this.statistics.add(SiteStatistic.ofZeroWithWeatherData(hourOfDay, weatherMeasurement));
         }
         return this;
     }

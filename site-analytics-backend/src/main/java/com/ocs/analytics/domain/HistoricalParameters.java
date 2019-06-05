@@ -99,6 +99,9 @@ public class HistoricalParameters {
     /**
      * Used to map the fields of this object to something we can put in a form in the
      * {@link io.vertx.core.http.HttpClient}
+     * <p>
+     * Note: we don't take the hour fields into account because it may result in a partial day for all records (in case
+     * the last day of the site statistics only contains partial day content).
      *
      * @return a multimap with the contents of the fields of this object.
      */
@@ -111,8 +114,6 @@ public class HistoricalParameters {
                 .add("eyear", String.valueOf(this.endYear))
                 .add("emonth", String.valueOf(this.endMonth))
                 .add("eday", String.valueOf(this.endDay))
-                .add("bhour", String.valueOf(this.startHour))
-                .add("ehour", String.valueOf(this.endHour))
                 .add("stations", this.stations)
                 .add("submit", SUBMIT);
 

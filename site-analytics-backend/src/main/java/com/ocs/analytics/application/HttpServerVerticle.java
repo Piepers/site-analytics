@@ -7,6 +7,7 @@ import io.reactivex.Single;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
+import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.reactivex.core.AbstractVerticle;
@@ -69,7 +70,8 @@ public class HttpServerVerticle extends AbstractVerticle {
         router.mountSubRouter("/api", subRouter);
 
         this.vertx
-                .createHttpServer()
+                .createHttpServer(new HttpServerOptions()
+                        .setCompressionSupported(true))
                 .requestHandler(router::accept)
                 .rxListen(this.port)
                 .subscribe(result -> {
@@ -89,14 +91,28 @@ public class HttpServerVerticle extends AbstractVerticle {
     }
 
     private void getLatestSiteStatistics(RoutingContext routingContext) {
-        routingContext.response().putHeader("Content-Type", "application/json");
+        routingContext
+                .response()
+                .putHeader("Content-Type", "application/json");
+
         Session session = routingContext.session();
         LOGGER.debug("The session id is now: {}", session.id());
-        SiteStatistics ss = routingContext.session().get("sitestatistics");
+        SiteStatistics ss = routingContext
+                .session()
+                .get("sitestatistics");
+
         if (Objects.isNull(ss)) {
-            routingContext.response().end(new JsonObject().put("result", "none").encode());
+            routingContext
+                    .response()
+                    .end(new JsonObject()
+                            .put("result", "none")
+                            .encode());
         } else {
-            routingContext.response().end(ss.toJson().encode());
+            routingContext
+                    .response()
+                    .end(ss
+                            .toJson()
+                            .encode());
         }
     }
 

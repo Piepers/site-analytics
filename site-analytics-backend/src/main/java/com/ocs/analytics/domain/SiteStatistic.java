@@ -77,6 +77,12 @@ public class SiteStatistic implements Comparable<SiteStatistic>, JsonDomainObjec
                 Day.of(ldt.getDayOfMonth()), Hour.of(ldt.getHour())), users, newUsers, sessions);
     }
 
+    public static SiteStatistic ofZeroWithWeatherData(HourOfDay hourOfDay, WeatherMeasurement weatherMeasurement) {
+        SiteStatistic ss = new SiteStatistic(UUID.randomUUID().toString(), hourOfDay, 0L, 0L, 0L);
+        ss.weatherMeasurement(weatherMeasurement);
+        return ss;
+    }
+
     public String getId() {
         return id;
     }
@@ -135,11 +141,17 @@ public class SiteStatistic implements Comparable<SiteStatistic>, JsonDomainObjec
     }
 
     // Note: this is slower than an old nested if construct but makes it more readable.
+//    private static final Comparator<SiteStatistic> COMPARATOR = Comparator
+//            .comparingInt((SiteStatistic ss) -> ss.hourOfDay.getHour().getValue())
+//            .thenComparingInt(ss -> ss.hourOfDay.getDay().getValue())
+//            .thenComparingInt(ss -> ss.hourOfDay.getMonth().getValue())
+//            .thenComparingInt(ss -> ss.hourOfDay.getYear().getValue());
+
     private static final Comparator<SiteStatistic> COMPARATOR = Comparator
-            .comparingInt((SiteStatistic ss) -> ss.hourOfDay.getHour().getValue())
-            .thenComparingInt(ss -> ss.hourOfDay.getDay().getValue())
+            .comparingInt((SiteStatistic ss) -> ss.hourOfDay.getYear().getValue())
             .thenComparingInt(ss -> ss.hourOfDay.getMonth().getValue())
-            .thenComparingInt(ss -> ss.hourOfDay.getYear().getValue());
+            .thenComparingInt(ss -> ss.hourOfDay.getDay().getValue())
+            .thenComparingInt(ss -> ss.hourOfDay.getHour().getValue());
 
     @Override
     public int compareTo(SiteStatistic o) {
