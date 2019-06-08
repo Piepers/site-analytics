@@ -78,7 +78,7 @@ public class WeatherMeasurement implements JsonDomainObject, Serializable {
         return new WeatherMeasurement(temperature, durPerc, sumPerc, humPerc, rain, snow, fog, thunder, ice, sun, clouds);
     }
 
-    private WeatherMeasurement(Integer temperature, Integer durPrec, Integer sumPrec, Integer humPerc, Boolean rain, Boolean snow, Boolean fog, Boolean thunder, Boolean ice, Integer sun, Integer clouds) {
+    public WeatherMeasurement(Integer temperature, Integer durPrec, Integer sumPrec, Integer humPerc, Boolean rain, Boolean snow, Boolean fog, Boolean thunder, Boolean ice, Integer sun, Integer clouds) {
         this.temperature = temperature;
         this.durPrec = durPrec;
         this.sumPrec = sumPrec;

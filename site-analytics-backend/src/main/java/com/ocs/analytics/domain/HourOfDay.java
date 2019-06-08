@@ -104,6 +104,15 @@ public class HourOfDay implements Serializable {
                         0);
     }
 
+    /**
+     * Returns the hour of day as an integer like: 20180101 for the 1st of January.
+     *
+     * @return an Integer that contains the year, month and day.
+     */
+    public Integer yearMonthDayAsFormattedInteger() {
+        return Integer.valueOf(year.getValue() + "" + (month.getValue() < 10 ? "0" + month.getValue() : month.getValue()) + (day.getValue() < 10 ? "0" + dayAsString() : dayAsString()));
+    }
+
     public boolean isMidnight() {
         return getHour().getValue() == 0;
     }

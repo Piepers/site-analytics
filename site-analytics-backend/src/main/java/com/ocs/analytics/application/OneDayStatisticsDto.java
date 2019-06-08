@@ -38,15 +38,15 @@ public class OneDayStatisticsDto {
     // Represents the line with amount of new users.
     private final JsonArray newUsersData;
     // Represents the line with amount of sessions.
-    private final JsonArray sessionData;
+    private final JsonArray sessionsData;
 
     public OneDayStatisticsDto(JsonArray labels, JsonArray tempData, JsonArray usersData, JsonArray newUsersData,
-                               JsonArray sessionData) {
+                               JsonArray sessionsData) {
         this.labels = labels;
         this.tempData = tempData;
         this.usersData = usersData;
         this.newUsersData = newUsersData;
-        this.sessionData = sessionData;
+        this.sessionsData = sessionsData;
     }
 
     public OneDayStatisticsDto(JsonObject jsonObject) {
@@ -54,7 +54,7 @@ public class OneDayStatisticsDto {
         this.tempData = jsonObject.getJsonArray("tempData");
         this.usersData = jsonObject.getJsonArray("usersData");
         this.newUsersData = jsonObject.getJsonArray("newUsersData");
-        this.sessionData = jsonObject.getJsonArray("sessionData");
+        this.sessionsData = jsonObject.getJsonArray("sessionsData");
     }
 
 
@@ -62,7 +62,7 @@ public class OneDayStatisticsDto {
      * Gets a portion of data which is assumed to start at midnight at a particular day and is assumed to be sorted by
      * hour. This method validates that the amount of data is indeed not more than a day and converts the content
      * into something the front-end can show.
-     *
+     * <p>
      * Warning: does not validate whether the hourly data is from the same day, only that it does not contain more than
      * 24 records assuming that it contains a proper set in the right order otherwise.
      *
@@ -90,7 +90,8 @@ public class OneDayStatisticsDto {
         Long firstUsers = first.getUsers();
         Long firstSessions = first.getSessions();
         Long firstNewUsers = first.getNewUsers();
-        Integer firstTempData = firstWm.getTemperature();
+        // Default to 0 if no weather data is present for this hour.
+        Integer firstTempData = firstWm != null ? firstWm.getTemperature() : 0;
         // Instantiate our arrays and populate the first records.
         JsonArray labels = new JsonArray().add(firstLabel);
         JsonArray tempData = new JsonArray().add(firstTempData);
@@ -102,9 +103,11 @@ public class OneDayStatisticsDto {
         siteStatistic
                 .stream()
                 .forEach(ss -> {
-                    labels.add(ss.getHourOfDay().getHour().getValue());
+                    int hourOfDay = ss.getHourOfDay().getHour().getValue();
+                    labels.add(hourOfDay < 10 ? "0" + hourOfDay : ""+hourOfDay);
                     WeatherMeasurement wm = ss.getWeatherMeasurements();
-                    tempData.add(wm.getTemperature());
+                    // Default to 0 if there is no weatherdata.
+                    tempData.add(wm != null ? wm.getTemperature() : 0);
                     usersData.add(ss.getUsers());
                     newUsersData.add(ss.getNewUsers());
                     sessionData.add(ss.getSessions());
@@ -129,8 +132,8 @@ public class OneDayStatisticsDto {
         return newUsersData;
     }
 
-    public JsonArray getSessionData() {
-        return sessionData;
+    public JsonArray getSessionsData() {
+        return sessionsData;
     }
 
 
@@ -145,7 +148,7 @@ public class OneDayStatisticsDto {
         if (!tempData.equals(that.tempData)) return false;
         if (!usersData.equals(that.usersData)) return false;
         if (!newUsersData.equals(that.newUsersData)) return false;
-        return sessionData.equals(that.sessionData);
+        return sessionsData.equals(that.sessionsData);
     }
 
     @Override
@@ -154,7 +157,7 @@ public class OneDayStatisticsDto {
         result = 31 * result + tempData.hashCode();
         result = 31 * result + usersData.hashCode();
         result = 31 * result + newUsersData.hashCode();
-        result = 31 * result + sessionData.hashCode();
+        result = 31 * result + sessionsData.hashCode();
         return result;
     }
 
@@ -165,7 +168,7 @@ public class OneDayStatisticsDto {
                 ", tempData=" + tempData +
                 ", usersData=" + usersData +
                 ", newUsersData=" + newUsersData +
-                ", sessionData=" + sessionData +
+                ", sessionsData=" + sessionsData +
                 '}';
     }
 }
