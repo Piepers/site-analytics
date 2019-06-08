@@ -141,12 +141,6 @@ public class SiteStatistic implements Comparable<SiteStatistic>, JsonDomainObjec
     }
 
     // Note: this is slower than an old nested if construct but makes it more readable.
-//    private static final Comparator<SiteStatistic> COMPARATOR = Comparator
-//            .comparingInt((SiteStatistic ss) -> ss.hourOfDay.getHour().getValue())
-//            .thenComparingInt(ss -> ss.hourOfDay.getDay().getValue())
-//            .thenComparingInt(ss -> ss.hourOfDay.getMonth().getValue())
-//            .thenComparingInt(ss -> ss.hourOfDay.getYear().getValue());
-
     private static final Comparator<SiteStatistic> COMPARATOR = Comparator
             .comparingInt((SiteStatistic ss) -> ss.hourOfDay.getYear().getValue())
             .thenComparingInt(ss -> ss.hourOfDay.getMonth().getValue())

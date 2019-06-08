@@ -8,7 +8,6 @@ import org.slf4j.LoggerFactory;
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.Period;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -25,10 +24,6 @@ import java.util.stream.Collectors;
 @DataObject
 public class SiteStatistics implements JsonDomainObject, Serializable {
     private static final Logger LOGGER = LoggerFactory.getLogger(SiteStatistics.class);
-
-    private static final String WM_EXPECTED_FORMAT = "yyyyMMdd";
-
-    private static final DateTimeFormatter wmFormatter = DateTimeFormatter.ofPattern(WM_EXPECTED_FORMAT);
 
     private final Set<SiteStatistic> statistics;
 

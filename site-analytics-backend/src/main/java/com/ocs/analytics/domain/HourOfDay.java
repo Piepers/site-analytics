@@ -5,6 +5,9 @@ import io.vertx.codegen.annotations.DataObject;
 import io.vertx.core.json.JsonObject;
 
 import java.io.Serializable;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 /**
  * The hour, day, month and year in the analytics data. Is used to sort and provide a way to match the statistics data
@@ -73,6 +76,37 @@ public class HourOfDay implements Serializable {
         return hour;
     }
 
+    /**
+     * FIXME: We assume that the imported data is from the Dutch timezone.
+     * <p>
+     * Converts this instance to an instant.
+     *
+     * @return an instant representation of this class.
+     */
+    public Instant asInstant() {
+        return asLocalDateTime()
+                .atZone(ZoneId.of("Europe/Amsterdam"))
+                .toInstant();
+    }
+
+    public Instant asInstantAtTz(ZoneId zoneId) {
+        return asLocalDateTime()
+                .atZone(zoneId)
+                .toInstant();
+    }
+
+    public LocalDateTime asLocalDateTime() {
+        return LocalDateTime
+                .of(this.year.getValue(),
+                        this.month.getValue(),
+                        this.day.getValue(),
+                        this.hour.getValue(),
+                        0);
+    }
+
+    public boolean isMidnight() {
+        return getHour().getValue() == 0;
+    }
 
     @Override
     public boolean equals(Object o) {

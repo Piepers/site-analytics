@@ -84,7 +84,8 @@ public class SiteStatisticsServiceImpl implements SiteStatisticsService {
                     .map(string -> string.replaceAll("\\s", ""))
                     .filter(string -> string.matches(WeatherMeasurement.RECORD_PATTERN));
         } else {
-            return Observable.error(() -> new ServiceException(response.statusCode(), response.statusMessage()));
+            return Observable
+                    .error(() -> new ServiceException(response.statusCode(), response.statusMessage()));
         }
 
     }
