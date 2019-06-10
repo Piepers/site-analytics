@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Objects;
 import java.util.Optional;
+import java.util.TreeSet;
 
 public class HttpServerVerticle extends AbstractVerticle {
     private static final Logger LOGGER = LoggerFactory.getLogger(HttpServerVerticle.class);
@@ -132,6 +133,9 @@ public class HttpServerVerticle extends AbstractVerticle {
                             .<JsonObject>rxSend("file-upload", jsonObject)
                             .doOnSuccess(message -> LOGGER.debug("An import has been processed with {} items.", message.body().getJsonArray("statistics", new JsonArray()).size()))
                             .flatMap(message -> Single.just(new SiteStatistics(message.body())))
+                            // FIXME: EXPERIMENTAL
+                            .doOnSuccess(siteStatistics -> SiteStatisticsDto.fromOrderedStatistics((TreeSet)siteStatistics.getStatistics()))
+                            // END EXPERIMENTAL
                             .doOnSuccess(siteStatistics -> routingContext.session().put("importing", false))
                             .subscribe(siteStatistics -> routingContext.session().put("sitestatistics", siteStatistics),
                                     throwable -> LOGGER.error("Something went wrong while importing the file.", throwable));

@@ -84,7 +84,6 @@ public class SiteStatistics implements JsonDomainObject, Serializable {
     public SiteStatistics addMeasurementBasedOnRecord(String csv) {
         String[] contents = csv.split(",");
         WeatherMeasurement weatherMeasurement = WeatherMeasurement.from(contents);
-
         // Expecting year-month-day in second position
         String date = contents[1];
 
@@ -93,7 +92,7 @@ public class SiteStatistics implements JsonDomainObject, Serializable {
         int day = Integer.valueOf(date.substring(6));
 
         // Expecting the third position to contain a hour of day.
-        int hour = Integer.valueOf(contents[2]) - 1;
+        int hour = (Integer.valueOf(contents[2])) - 1;
 
         HourOfDay hourOfDay = HourOfDay.of(year, month, day, hour);
 
@@ -108,7 +107,7 @@ public class SiteStatistics implements JsonDomainObject, Serializable {
         if (s.isPresent()) {
             s.get().weatherMeasurement(weatherMeasurement);
         } else {
-            LOGGER.trace("Did not find a corresponding site statistics for year-month-day-hour: {}. Creating new one with 0 values.", hourOfDay.toString());
+            LOGGER.debug("Did not find a corresponding site statistics for year-month-day-hour: {}. Creating new one with 0 values.", hourOfDay.toString());
             this.statistics.add(SiteStatistic.ofZeroWithWeatherData(hourOfDay, weatherMeasurement));
         }
         return this;

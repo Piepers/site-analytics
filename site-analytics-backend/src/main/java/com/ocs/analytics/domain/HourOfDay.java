@@ -110,7 +110,9 @@ public class HourOfDay implements Serializable {
      * @return an Integer that contains the year, month and day.
      */
     public Integer yearMonthDayAsFormattedInteger() {
-        return Integer.valueOf(year.getValue() + "" + (month.getValue() < 10 ? "0" + month.getValue() : month.getValue()) + (day.getValue() < 10 ? "0" + dayAsString() : dayAsString()));
+        return Integer.valueOf(year.getValue() + "" +
+                (month.getValue() < 10 ? "0" + month.getValue() : month.getValue()) +
+                (day.getValue() < 10 ? "0" + dayAsString() : dayAsString()));
     }
 
     public boolean isMidnight() {

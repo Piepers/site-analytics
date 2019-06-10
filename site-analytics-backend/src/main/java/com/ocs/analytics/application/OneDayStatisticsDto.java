@@ -5,6 +5,8 @@ import com.ocs.analytics.domain.WeatherMeasurement;
 import io.vertx.codegen.annotations.DataObject;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.format.DateTimeFormatter;
 import java.util.Objects;
@@ -28,6 +30,7 @@ import java.util.TreeSet;
  */
 @DataObject
 public class OneDayStatisticsDto {
+    private static final Logger LOGGER = LoggerFactory.getLogger(OneDayStatisticsDto.class);
     private static final String LABEL_MIDNIGHT_FORMAT = "dd MMM yyyy HH";
     private static final DateTimeFormatter mnFormatter = DateTimeFormatter.ofPattern(LABEL_MIDNIGHT_FORMAT);
     private final JsonArray labels;
@@ -80,6 +83,7 @@ public class OneDayStatisticsDto {
         }
 
         SiteStatistic first = siteStatistic.pollFirst();
+        LOGGER.debug("First statistics were of: {} ({})", first.getHourOfDay().toString(), first.getHourOfDay().yearMonthDayAsFormattedInteger());
 
         if (Objects.isNull(first) || !first.getHourOfDay().isMidnight()) {
             throw new IllegalArgumentException("The site statistics for a page should always start at midnight.");

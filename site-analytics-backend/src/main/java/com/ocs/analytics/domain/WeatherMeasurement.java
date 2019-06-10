@@ -22,7 +22,8 @@ import java.util.Arrays;
 public class WeatherMeasurement implements JsonDomainObject, Serializable {
     private static final Logger LOGGER = LoggerFactory.getLogger(WeatherMeasurement.class);
     // The pattern we assume the weathermeasurement contains. 15 columns of numerical data where the second  column contains a date pattern.
-    public static final String RECORD_PATTERN = "^[0-9]{3},[0-9]{8},\\d*,\\d*,\\d*,\\d*,\\d*,\\d*,\\d*,\\d*,\\d*,\\d*,\\d*,\\d*,\\d*$";
+    public static final String POSNEG_NR_PATTERN = "(-?[1-9]\\d*|0|\\s?)(,|$)";
+    public static final String RECORD_PATTERN = "^[0-9]{3},[0-9]{8},(" + POSNEG_NR_PATTERN + "){13}";
     private final Integer temperature; // in 0.1 degrees celsius
     private final Integer durPrec; // duration of the precipitation. Can be 0 for no rainfall. in 0.1 hours.
     private final Integer sumPrec; // hourly sum of precipitation or -1 in case it was less than 0.05mm.
