@@ -6,6 +6,7 @@ import io.vertx.core.json.JsonObject;
 
 import java.io.Serializable;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 
@@ -93,6 +94,10 @@ public class HourOfDay implements Serializable {
         return asLocalDateTime()
                 .atZone(zoneId)
                 .toInstant();
+    }
+
+    public LocalDate asLocalDate() {
+        return LocalDate.of(this.year.getValue(), this.month.getValue(), this.day.getValue());
     }
 
     public LocalDateTime asLocalDateTime() {

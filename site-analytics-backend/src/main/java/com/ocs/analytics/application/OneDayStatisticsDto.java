@@ -103,7 +103,7 @@ public class OneDayStatisticsDto {
         JsonArray newUsersData = new JsonArray().add(firstNewUsers);
         JsonArray sessionData = new JsonArray().add(firstSessions);
 
-        // Iterate the rest of the set and make sure that we don't surpass a day. Throw an exception if we do.
+        // Iterate the rest of the set and populate the arrays.
         siteStatistic
                 .stream()
                 .forEach(ss -> {
