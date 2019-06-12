@@ -31,7 +31,7 @@ public class SiteStatisticsDto implements Serializable {
     private static final int INCREMENT_SIZE = 1;
     private static final int ONE_DAY_MS = 86400000;
     // Where we are at the moment. If null assume start of pages.
-    private Long currentStartKey;
+    private Integer currentStartKey;
     // The first day in the Map (an integer like 20180101 for the first of january 2018).
     private Integer startKey;
     // The last day in the Map (an integer like 20181231 for the 31st of december 2018).
@@ -72,8 +72,64 @@ public class SiteStatisticsDto implements Serializable {
                                 OneDayStatisticsDto::from)));
 
 
-
         return new SiteStatisticsDto(startKey, endKey, dtoMap);
+    }
+
+    /**
+     * Start (or shift to the start) and get PAGE_SIZE of OneDayStatisticsDto and return the resulting list.
+     *
+     * @return the first PAGE_SIZE amount of pages or as much as we have in the map.
+     */
+    public List<OneDayStatisticsDto> first() {
+
+        return null;
+    }
+
+    /**
+     * End (or shift to the end) and get PAGE_SIZE of OneDayStatisticsDto and return the resulting list.
+     *
+     * @return the last PAGE_SIZE amount of pages or as much as we have in the map.
+     */
+    public List<OneDayStatisticsDto> last() {
+
+        return null;
+    }
+
+    /**
+     * Get the next INCREMENT_SIZE of {@link OneDayStatisticsDto} objects and return the resulting list (or call "first"
+     * if there is no current key yet). If we arrived at the end we keep returning the last page of the map.
+     * <p>
+     * Works as a queue/linkedlist kind of implementation because the "left" items are dropped (for the amount specified
+     * at INCREMENT_SIZE) and the next items are put at the end. INCREMENT_SIZE may be larger than the initial PAGE_SIZE
+     * so this method checks where we are and returns the proper amount of dto's.
+     *
+     * @return the next INCREMENT_SIZE amount of pages. The previous INCREMENT_SIZE items are dropped and the next is put at the
+     * end.
+     */
+    public List<OneDayStatisticsDto> next() {
+        // If the current key is null invoke "first"
+
+        // Otherwise: shift INCREMENT_SIZE pages "to the right" and return the resulting list.
+
+        // Unless we are at the end of the list.
+        return null;
+    }
+
+    /**
+     * Get the previous INCREMENT_SIZE of {@link OneDayStatisticsDto} objects and return the resulting list. Returns
+     * the first PAGE_SIZE amount of pages if we are already at the beginning (or if the first set was never retrieved
+     * before).
+     * <p>
+     * The implementation is the reverse of the {@link SiteStatisticsDto#next()} method of this class.
+     *
+     * @return the previous INCREMENT_SIZE amount of pages. The last item in the last INCREMENT_SIZE items are dropped and
+     * previous items are put at the front.
+     */
+    public List<OneDayStatisticsDto> previous() {
+        // If the current key is not null and we are not at the start of the list.
+        // Shift INCREMENT_SIZE pages "to the left" and return the resulting list.
+
+        return null;
     }
 
 }
