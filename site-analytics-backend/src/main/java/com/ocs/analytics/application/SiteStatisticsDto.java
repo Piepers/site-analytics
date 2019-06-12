@@ -39,7 +39,7 @@ public class SiteStatisticsDto implements Serializable {
 
     private Map<Integer, OneDayStatisticsDto> statistics = new HashMap<>();
 
-    private SiteStatisticsDto(Integer start, Integer end, HashMap<Integer, OneDayStatisticsDto> statistics) {
+    private SiteStatisticsDto(Integer start, Integer end, TreeMap<Integer, OneDayStatisticsDto> statistics) {
         this.startKey = start;
         this.endKey = end;
         this.statistics = statistics;
@@ -62,46 +62,18 @@ public class SiteStatisticsDto implements Serializable {
         SiteStatistic last = orderedStatistics.last();
         Integer endKey = last.getHourOfDay().yearMonthDayAsFormattedInteger();
 
-        // Experiment: collect into a map with a integer and a treeset firrst
-//        Map<Integer, List<SiteStatistic>> mapped = orderedStatistics
-//                .stream()
-//                .peek(ss -> System.out.println("Mapping site statistic " + ss.getHourOfDay().yearMonthDayAsFormattedInteger()))
-//                .collect(groupingBy(keyFunc, Collectors.toList()));
-
-//        mapped.entrySet().stream().forEach(entry -> {
-//            System.out.println("Entry " + entry.getKey());
-//            entry.getValue().stream().forEach(siteStatistic -> System.out.println("Value: " + siteStatistic.getHourOfDay().toString()));
-//        });
-
-//        Map<Integer, TreeSet<SiteStatistic>> setMap = orderedStatistics.stream().collect(groupingBy(keyFunc, Collectors.toCollection(() -> new TreeSet<>())));
-//        setMap.entrySet().stream().forEach(entry -> {
-//            System.out.println("Entry " + entry.getKey());
-//            entry.getValue().stream().forEach(siteStatistic -> System.out.println("Value: " + siteStatistic.getHourOfDay().toString()));
-//        });
-
-        Map<Integer, OneDayStatisticsDto> dtoMap = orderedStatistics
+        TreeMap<Integer, OneDayStatisticsDto> dtoMap = orderedStatistics
                 .stream()
                 .collect(groupingBy(siteStatistic -> siteStatistic
                                 .getHourOfDay()
                                 .yearMonthDayAsFormattedInteger(),// Group per day
+                        TreeMap::new,// Collect into a treemap (instead of the default HashMap)
                         collectingAndThen(Collectors.toCollection(() -> new TreeSet<>()),// Collect into a TreeSet and then instantiate the dto (which will map the records with another stream).
                                 OneDayStatisticsDto::from)));
-        dtoMap
-                .entrySet()
-                .stream()
-                .forEach(entry -> {
-                    System.out.println("Entry " + entry.getKey());
-                    System.out.println("Value " + entry.getValue().toString());
-                });
 
 
-//        Map<Integer, OneDayStatisticsDto> mapped = orderedStatistics
-//                .stream()
-//                .collect(groupingBy(keyFunc),
-//                        OneDayStatisticsDto.from());// Downstream collector
-//        orderedStatistics.stream().collect(groupingBy())
 
-        return null;
+        return new SiteStatisticsDto(startKey, endKey, dtoMap);
     }
 
 }
