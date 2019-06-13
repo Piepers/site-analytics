@@ -10,7 +10,6 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import static java.util.stream.Collectors.collectingAndThen;
 import static java.util.stream.Collectors.groupingBy;
@@ -42,15 +41,19 @@ public class SiteStatisticsDto implements Serializable {
     private static final int INCREMENT_SIZE = 1;
     private static final String KEY_FORMAT = "yyyyMMdd";
     private static final int ONE_DAY = 86_400_000;
-    private static final DateTimeFormatter keyFormatter = DateTimeFormatter.ofPattern("KEY_FORMAT");
-    // Where we are at the moment. If null assume start of pages.
-    private LocalDate currentStartKey;
-    // The first day in the Map (an integer like 20180101 for the first of january 2018).
+    private static final DateTimeFormatter keyFormatter = DateTimeFormatter.ofPattern(KEY_FORMAT);
+    // Where the start is at the moment. If null assume start of pages.
+    private LocalDate sop;
+    // Where the current end is at the moment. If null assume start of page + increment size.
+    private LocalDate eop;
+    // The first day in the Map.
     private LocalDate startKey;
-    // The last day in the Map (an integer like 20181231 for the 31st of december 2018).
+    // The last day in the Map .
     private LocalDate endKey;
 
+    // The entire collection of statistics as we imported it.
     private Map<Integer, OneDayStatisticsDto> statistics;
+    // The current page.
     private LinkedList<OneDayStatisticsDto> currentPage;
 
     private SiteStatisticsDto(LocalDate start, LocalDate end, HashMap<Integer, OneDayStatisticsDto> statistics) {
@@ -96,18 +99,13 @@ public class SiteStatisticsDto implements Serializable {
      */
     public List<OneDayStatisticsDto> first() {
         this.currentPage = new LinkedList<>();
-        this.currentStartKey = this.startKey;
+        this.sop = this.startKey;
+        // Set the end of page key to the start op page + increment or the end op the collection if it happens to be after that.
+        this.eop = (this.eop = sop.plusDays(PAGE_SIZE)).isAfter(this.endKey) ? this.endKey : this.eop;
 
-        Integer key = Integer.valueOf(this.currentStartKey.format(keyFormatter));
-        OneDayStatisticsDto dto;
-        int count = 0;
-        while ((dto = this.statistics.get(key)) != null && count < PAGE_SIZE) {
-            currentPage.add(dto);
-            this.currentStartKey.plus(1, ChronoUnit.DAYS);
-            key = Integer.valueOf(this.currentStartKey.format(keyFormatter));
-        }
-        return currentPage;
+        return fillPageStatistics();
     }
+
 
     /**
      * End (or shift to the end) and get PAGE_SIZE of OneDayStatisticsDto and return the resulting list.
@@ -116,18 +114,11 @@ public class SiteStatisticsDto implements Serializable {
      */
     public List<OneDayStatisticsDto> last() {
         this.currentPage = new LinkedList<>();
-        this.currentStartKey = this.endKey;
-        Integer key = Integer.valueOf(this.currentStartKey.format(keyFormatter));
-        // TODO: move the key 
-        OneDayStatisticsDto dto;
-        int count = 0;
-        while ((dto = this.statistics.get(key)) != null && count < PAGE_SIZE) {
-            currentPage.addFirst(dto);
-            this.currentStartKey.minus(1, ChronoUnit.DAYS);
-            key = Integer.valueOf(this.currentStartKey.format(keyFormatter));
-        }
+        this.eop = this.endKey;
+        // Set the start of the page to the start page - increment or the start of the collection of it happens to be before that.
+        this.sop = (this.sop = eop.minusDays(PAGE_SIZE)).isBefore(this.startKey) ? this.startKey : this.sop;
 
-        return currentPage;
+        return fillPageStatistics();
     }
 
     /**
@@ -180,4 +171,17 @@ public class SiteStatisticsDto implements Serializable {
         return null;
     }
 
+    private List<OneDayStatisticsDto> fillPageStatistics() {
+        LocalDate ld = sop;
+        OneDayStatisticsDto dto;
+        while (!ld.isAfter(eop) && (dto = this.statistics.get(this.formatDateToKey(ld))) != null) {
+            currentPage.add(dto);
+            ld = ld.plusDays(1);
+        }
+        return currentPage;
+    }
+
+    private Integer formatDateToKey(LocalDate localDate) {
+        return Integer.valueOf(localDate.format(keyFormatter));
+    }
 }

@@ -140,6 +140,9 @@ public class OneDayStatisticsDto {
         return sessionsData;
     }
 
+    public JsonObject toJson() {
+        return JsonObject.mapFrom(this);
+    }
 
     @Override
     public boolean equals(Object o) {
