@@ -83,7 +83,6 @@ public class OneDayStatisticsDto {
         }
 
         SiteStatistic first = siteStatistic.pollFirst();
-        LOGGER.debug("First statistics were of: {} ({})", first.getHourOfDay().toString(), first.getHourOfDay().yearMonthDayAsFormattedInteger());
 
         if (Objects.isNull(first) || !first.getHourOfDay().isMidnight()) {
             throw new IllegalArgumentException("The site statistics for a page should always start at midnight.");

@@ -138,28 +138,35 @@ public class SiteStatisticsDto implements Serializable {
             return this.first();
         }
 
-
-        // If we're already at the end, return the list (which should be empty).
-        if(this.sop.isEqual(endKey)) {
+        // If we're already at the end, clear the list and return it.
+        if (this.sop.isEqual(endKey)) {
+            this.currentPage.clear();
             return this.currentPage;
         }
 
         // Set the sop and eop.
         this.sop = (this.sop = this.sop.plusDays(INCREMENT_SIZE)).isAfter(endKey) ? this.endKey : this.sop;
+        LocalDate ld = this.eop;
         this.eop = (this.eop = this.eop.plusDays(INCREMENT_SIZE)).isAfter(endKey) ? this.endKey : this.eop;
-
         // Process next, always remove the first item until it is empty.
         try {
             int count = 0;
             while (count < INCREMENT_SIZE) {
                 this.currentPage.removeFirst();
+                count += 1;
             }
         } catch (NoSuchElementException e) {
             LOGGER.debug("We are already at the end of the list and the page is also empty. Page contains {} items.", this.currentPage.size());
         }
 
-        // Fill the page again with the next content.
-        return this.fillPageStatistics();
+        // Fill the page with the next content.
+        OneDayStatisticsDto dto;
+        ld = ld.plusDays(1);
+        while (!ld.isAfter(eop) && (dto = this.statistics.get(this.formatDateToKey(ld))) != null) {
+            ld = ld.plusDays(1);
+            this.currentPage.add(dto);
+        }
+        return this.currentPage;
     }
 
     /**
@@ -173,10 +180,42 @@ public class SiteStatisticsDto implements Serializable {
      * previous items are put at the front.
      */
     public List<OneDayStatisticsDto> previous() {
-        // If the current key is not null and we are not at the start of the list.
-        // Shift INCREMENT_SIZE pages "to the left" and return the resulting list.
+        // If we do not have a page yet return null.
+        if (Objects.isNull(this.currentPage)) {
+            LOGGER.debug("Previous called without pages.");
+            return null;
+        }
 
-        return null;
+        // If we are at the start again, clear the list and return it.
+        if (this.eop.isEqual(startKey)) {
+            this.currentPage.clear();
+            return this.currentPage;
+        }
+
+        // Set the sop and eop.
+        LocalDate ld = this.sop;
+        this.sop = (this.sop = this.sop.minusDays(INCREMENT_SIZE)).isBefore(startKey) ? this.startKey: this.sop;
+        this.eop = (this.eop = this.eop.minusDays(INCREMENT_SIZE)).isBefore(startKey) ? this.startKey: this.eop;
+
+        // Process previous, always remove the last item until it is empty.
+        try {
+            int count = 0;
+            while (count < INCREMENT_SIZE) {
+                this.currentPage.removeLast();
+                count += 1;
+            }
+        } catch (NoSuchElementException e) {
+            LOGGER.debug("We are already at the start of the list and the page is also empty. Page contains {} items.", this.currentPage.size());
+        }
+
+        // Fill the page with the previous content.
+        OneDayStatisticsDto dto;
+        ld = ld.minusDays(1);
+        while (!ld.isBefore(sop) && (dto = this.statistics.get(this.formatDateToKey(ld))) != null) {
+            ld = ld.minusDays(1);
+            this.currentPage.addFirst(dto);
+        }
+        return this.currentPage;
     }
 
     private List<OneDayStatisticsDto> fillPageStatistics() {
