@@ -79,6 +79,18 @@ public class WeatherMeasurement implements JsonDomainObject, Serializable {
         return new WeatherMeasurement(temperature, durPerc, sumPerc, humPerc, rain, snow, fog, thunder, ice, sun, clouds);
     }
 
+    /**
+     * Mainly for testing purposes so that we can test the dto that generates the statistics in a way it can be
+     * displayed in the front-end. Only sets the temperature. The rest will be set to 0/false.
+     *
+     * @param temp, the temperature that must be stored.
+     * @return in instance of this class with just the temperature set.
+     */
+    public static WeatherMeasurement withTemp(int temp) {
+        return new WeatherMeasurement(temp, 0, 0, 0, false, false, false, false, false, 0, 0);
+
+    }
+
     public WeatherMeasurement(Integer temperature, Integer durPrec, Integer sumPrec, Integer humPerc, Boolean rain, Boolean snow, Boolean fog, Boolean thunder, Boolean ice, Integer sun, Integer clouds) {
         this.temperature = temperature;
         this.durPrec = durPrec;

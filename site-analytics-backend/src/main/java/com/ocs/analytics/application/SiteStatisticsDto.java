@@ -101,7 +101,7 @@ public class SiteStatisticsDto implements Serializable {
         this.currentPage = new LinkedList<>();
         this.sop = this.startKey;
         // Set the end of page key to the start op page + increment or the end op the collection if it happens to be after that.
-        this.eop = (this.eop = sop.plusDays(PAGE_SIZE)).isAfter(this.endKey) ? this.endKey : this.eop;
+        this.eop = (this.eop = sop.plusDays(PAGE_SIZE - 1)).isAfter(this.endKey) ? this.endKey : this.eop;
 
         return fillPageStatistics();
     }
@@ -116,7 +116,7 @@ public class SiteStatisticsDto implements Serializable {
         this.currentPage = new LinkedList<>();
         this.eop = this.endKey;
         // Set the start of the page to the start page - increment or the start of the collection of it happens to be before that.
-        this.sop = (this.sop = eop.minusDays(PAGE_SIZE)).isBefore(this.startKey) ? this.startKey : this.sop;
+        this.sop = (this.sop = eop.minusDays(PAGE_SIZE - 1)).isBefore(this.startKey) ? this.startKey : this.sop;
 
         return fillPageStatistics();
     }
