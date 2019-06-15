@@ -133,25 +133,33 @@ public class SiteStatisticsDto implements Serializable {
      * end.
      */
     public List<OneDayStatisticsDto> next() {
-        // Always remove the first item until it is empty.
+        // If the current page is not set yet, assume we must call first.
+        if (Objects.isNull(this.currentPage)) {
+            return this.first();
+        }
+
+
+        // If we're already at the end, return the list (which should be empty).
+        if(this.sop.isEqual(endKey)) {
+            return this.currentPage;
+        }
+
+        // Set the sop and eop.
+        this.sop = (this.sop = this.sop.plusDays(INCREMENT_SIZE)).isAfter(endKey) ? this.endKey : this.sop;
+        this.eop = (this.eop = this.eop.plusDays(INCREMENT_SIZE)).isAfter(endKey) ? this.endKey : this.eop;
+
+        // Process next, always remove the first item until it is empty.
         try {
             int count = 0;
             while (count < INCREMENT_SIZE) {
-                currentPage.removeFirst();
+                this.currentPage.removeFirst();
             }
         } catch (NoSuchElementException e) {
-            LOGGER.debug("We are already at the end of the list and the page is also empty.");
+            LOGGER.debug("We are already at the end of the list and the page is also empty. Page contains {} items.", this.currentPage.size());
         }
 
-        // Move the current key to the end of the page (if it is not empty or not already there
-        // )
-
-        // If the current key is null invoke "first"
-
-        // Otherwise: shift INCREMENT_SIZE pages "to the right" and return the resulting list.
-
-        // Unless we are at the end of the list.
-        return null;
+        // Fill the page again with the next content.
+        return this.fillPageStatistics();
     }
 
     /**
@@ -175,10 +183,10 @@ public class SiteStatisticsDto implements Serializable {
         LocalDate ld = sop;
         OneDayStatisticsDto dto;
         while (!ld.isAfter(eop) && (dto = this.statistics.get(this.formatDateToKey(ld))) != null) {
-            currentPage.add(dto);
+            this.currentPage.add(dto);
             ld = ld.plusDays(1);
         }
-        return currentPage;
+        return this.currentPage;
     }
 
     private Integer formatDateToKey(LocalDate localDate) {
