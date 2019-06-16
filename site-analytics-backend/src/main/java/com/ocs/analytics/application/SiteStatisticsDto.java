@@ -1,6 +1,8 @@
 package com.ocs.analytics.application;
 
 import com.ocs.analytics.domain.SiteStatistic;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,7 +42,6 @@ public class SiteStatisticsDto implements Serializable {
     // Amount of days an increment shifts (next/previous)
     private static final int INCREMENT_SIZE = 1;
     private static final String KEY_FORMAT = "yyyyMMdd";
-    private static final int ONE_DAY = 86_400_000;
     private static final DateTimeFormatter keyFormatter = DateTimeFormatter.ofPattern(KEY_FORMAT);
     // Where the start is at the moment. If null assume start of pages.
     private LocalDate sop;
@@ -216,6 +217,21 @@ public class SiteStatisticsDto implements Serializable {
             this.currentPage.addFirst(dto);
         }
         return this.currentPage;
+    }
+
+    public JsonObject getPageAsJson() {
+        if (Objects.isNull(this.currentPage)) {
+            LOGGER.debug("No page available yet. Call 'first()'.");
+            return new JsonObject();
+        }
+        JsonArray result = new JsonArray(this.currentPage);
+        return new JsonObject()
+                .put("count", statistics.size())
+                .put("startKey", keyFormatter.format(this.startKey))
+                .put("endKey", keyFormatter.format(this.endKey))
+                // TODO: keep track of the pagenumber.
+                .put("pageNr", 1)
+                .put("page", result);
     }
 
     private List<OneDayStatisticsDto> fillPageStatistics() {

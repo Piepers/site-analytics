@@ -107,7 +107,6 @@ public class SiteStatistics implements JsonDomainObject, Serializable {
         if (s.isPresent()) {
             s.get().weatherMeasurement(weatherMeasurement);
         } else {
-            LOGGER.debug("Did not find a corresponding site statistics for year-month-day-hour: {}. Creating new one with 0 values.", hourOfDay.toString());
             this.statistics.add(SiteStatistic.ofZeroWithWeatherData(hourOfDay, weatherMeasurement));
         }
         return this;

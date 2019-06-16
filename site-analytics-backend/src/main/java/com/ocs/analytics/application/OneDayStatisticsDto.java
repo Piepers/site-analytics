@@ -8,6 +8,7 @@ import io.vertx.core.json.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.Serializable;
 import java.time.format.DateTimeFormatter;
 import java.util.Objects;
 import java.util.TreeSet;
@@ -29,7 +30,7 @@ import java.util.TreeSet;
  * @author Bas Piepers
  */
 @DataObject
-public class OneDayStatisticsDto {
+public class OneDayStatisticsDto implements Serializable {
     private static final Logger LOGGER = LoggerFactory.getLogger(OneDayStatisticsDto.class);
     private static final String LABEL_MIDNIGHT_FORMAT = "dd MMM yyyy HH";
     private static final DateTimeFormatter mnFormatter = DateTimeFormatter.ofPattern(LABEL_MIDNIGHT_FORMAT);
