@@ -18,29 +18,57 @@
     let statisticsData;
 
     let callback = function (frame) {
-        console.log("Received update from backend. Updating table...")
-        let data = JSON.parse(frame.body);
-        processData(data);
+        let statistics = JSON.parse(frame.body);
+        processData(statistics);
     };
 
     client.connect({}, function () {
         var subscription = client.subscribe("weather-data-enriched", callback);
-        console.log("The subscription id is: " + subscription.id)
     })
 
-    function processData(data) {
-        statisticsData = data;
-        let d = data.page;
-        // let d = data.drafts;
-        // document.getElementById("header-td").innerHTML = `<h1>Super 11 Uden Standings</h1>`;
-        // Populate the table with the data from the fetch action.
-        // let output = "";
-        // d.forEach(draft => {
-        <#--    output += `<tr><td>${draft.rank}</td><td>${draft.draftName}</td><td>${draft.points}</td><td>${draft.totalPoints}</td></tr>`;-->
-        // });
+    function processData(statistics) {
+        statisticsData = statistics;
+        let pages = statisticsData.page;
+        let labelData = [];
+        let tempData = [];
+        let vititorData = [];
+        pages.forEach(page => {
+            let labels = page.labels;
+            labels.forEach(lbl => labelData.push(lbl))
+            let temps = page.tempData;
+            temps.forEach(tmp => tempData.push(tmp));
+            let users = page.usersData;
+            users.forEach(usrs => vititorData.push(usrs));
+        });
 
-        // document.getElementById("standings-body").innerHTML = output;
-        console.log("Data is now: " + statisticsData);
+        var ctx = document.getElementById('site-chart').getContext('2d');
+        var chart = new Chart(ctx, {
+            // The type of chart we want to create
+            type: 'line',
+
+            // The data for our dataset
+            data: {
+                labels: labelData,
+                datasets: [{
+                    label: 'Visits',
+                    fill: false,
+                    backgroundColor: 'rgb(255, 99, 132)',
+                    borderColor: 'rgb(255, 99, 132)',
+                    data: vititorData
+                },
+                    {
+                        label: 'Temperature',
+                        fill: false,
+                        backgroundColor: 'rgb(79, 114, 255)',
+                        borderColor: 'rgb(30, 45, 255)',
+                        data: tempData
+                    }]
+            },
+
+            options: {
+            }
+        });
+        document.getElementById("processing").innerText = "Processing complete.";
     }
 
 </script>
