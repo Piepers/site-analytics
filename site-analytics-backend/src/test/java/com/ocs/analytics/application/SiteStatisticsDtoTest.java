@@ -354,7 +354,6 @@ public class SiteStatisticsDtoTest {
         assertThat(page.get(2).getUsersData()).isEqualTo(new JsonArray(Arrays.asList(192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215)));
         assertThat(page.get(2).getNewUsersData()).isEqualTo(new JsonArray(Arrays.asList(202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224, 225)));
         assertThat(page.get(2).getSessionsData()).isEqualTo(new JsonArray(Arrays.asList(212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235)));
-        page.stream().forEach(d -> System.out.println(d.toJson().encodePrettily()));
 
     }
     private TreeSet<SiteStatistic> generateStatistics(LocalDate start, LocalDate end) {

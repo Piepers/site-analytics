@@ -23,5 +23,15 @@
         <canvas id="site-chart"></canvas>
     </div>
 </div>
+<div class="row">
+    <div class="col-md-12 mt-1">
+        <div class="btn-group" role="group" aria-label="Basic example">
+            <button type="button" class="btn btn-primary"><< Begin</button>
+            <button type="button" class="btn btn-primary">< Previous</button>
+            <button type="button" class="btn btn-primary">Next ></button>
+            <button type="button" class="btn btn-primary">End >></button>
+        </div>
+    </div>
+</div>
 
 <#include "footer.ftl">
