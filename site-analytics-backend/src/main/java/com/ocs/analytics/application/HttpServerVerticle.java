@@ -38,7 +38,6 @@ public class HttpServerVerticle extends AbstractVerticle {
     private static final String UPDATE_STOMP_DESTINATION = "weather-data-enriched";
     private final FreeMarkerTemplateEngine templateEngine = FreeMarkerTemplateEngine.create();
     private LocalSessionStore sessionStore;
-    // FIXME: build a timer that removes statistics for which no session exists anymore.
     private Map<String, SiteStatisticsDto> localStatisticsStore;
     private int port;
     private io.vertx.reactivex.core.Vertx rxVertx;
