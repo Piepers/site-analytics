@@ -3,7 +3,8 @@
 #
 .vertx
 non-public-config.json
-debug.log
+*.log
+static-prototype/
 
 # Editor directories and files
 .idea
