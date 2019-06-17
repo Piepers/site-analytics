@@ -1,6 +1,6 @@
 <#include "header.ftl">
 <div class="row">
-    <div class="col-md-12 mt-1">
+    <div class="col align-self-center">
         <#assign importing=context.session().get("importing")!false>
         <#if importing != true>
             <h1>Import a CSV file</h1>
@@ -20,16 +20,17 @@
         </#if>
     </div>
     <div class="col-md-12 mt-1">
-        <canvas id="site-chart"></canvas>
+        <canvas id="site-chart" hidden></canvas>
     </div>
 </div>
-<div class="row">
-    <div class="col-md-12 mt-1">
-        <div class="btn-group" role="group" aria-label="Basic example">
-            <button type="button" class="btn btn-primary"><< Begin</button>
-            <button type="button" class="btn btn-primary">< Previous</button>
-            <button type="button" class="btn btn-primary">Next ></button>
-            <button type="button" class="btn btn-primary">End >></button>
+<div id="button-row" class="row" hidden>
+    <div class="col text-center">
+        <div class="btn-group" role="group" aria-label="Pagination">
+            <button id="begin-button" type="button" class="btn btn-primary" onclick="handleBegin()"><< Begin</button>
+            <button id="previous-button" type="button" class="btn btn-primary" onclick="handlePrevious()">< Previous</button>
+            <button id="back" type="button" class="btn btn-primary" onclick="reset()">Back</button>
+            <button id="next-button" type="button" class="btn btn-primary" onclick="handleNext()">Next ></button>
+            <button id="end-button" type="button" class="btn btn-primary" onclick="handleEnd()">End >></button>
         </div>
     </div>
 </div>

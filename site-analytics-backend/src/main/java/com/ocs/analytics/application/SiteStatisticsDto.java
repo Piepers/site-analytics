@@ -9,7 +9,6 @@ import org.slf4j.LoggerFactory;
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -103,7 +102,6 @@ public class SiteStatisticsDto implements Serializable {
         this.sop = this.startKey;
         // Set the end of page key to the start op page + increment or the end op the collection if it happens to be after that.
         this.eop = (this.eop = sop.plusDays(PAGE_SIZE - 1)).isAfter(this.endKey) ? this.endKey : this.eop;
-
         return fillPageStatistics();
     }
 
@@ -195,8 +193,8 @@ public class SiteStatisticsDto implements Serializable {
 
         // Set the sop and eop.
         LocalDate ld = this.sop;
-        this.sop = (this.sop = this.sop.minusDays(INCREMENT_SIZE)).isBefore(startKey) ? this.startKey: this.sop;
-        this.eop = (this.eop = this.eop.minusDays(INCREMENT_SIZE)).isBefore(startKey) ? this.startKey: this.eop;
+        this.sop = (this.sop = this.sop.minusDays(INCREMENT_SIZE)).isBefore(startKey) ? this.startKey : this.sop;
+        this.eop = (this.eop = this.eop.minusDays(INCREMENT_SIZE)).isBefore(startKey) ? this.startKey : this.eop;
 
         // Process previous, always remove the last item until it is empty.
         try {
@@ -229,8 +227,8 @@ public class SiteStatisticsDto implements Serializable {
                 .put("count", statistics.size())
                 .put("startKey", keyFormatter.format(this.startKey))
                 .put("endKey", keyFormatter.format(this.endKey))
-                // TODO: keep track of the pagenumber.
-                .put("pageNr", 1)
+                .put("sop", keyFormatter.format(this.sop))
+                .put("eop", keyFormatter.format(this.eop))
                 .put("page", result);
     }
 
