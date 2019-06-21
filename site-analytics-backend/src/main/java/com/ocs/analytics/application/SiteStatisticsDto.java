@@ -6,7 +6,6 @@ import io.vertx.core.json.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -34,7 +33,7 @@ import static java.util.stream.Collectors.groupingBy;
  * @author Bas Piepers
  */
 
-public class SiteStatisticsDto implements Serializable {
+public class SiteStatisticsDto {
     private static final Logger LOGGER = LoggerFactory.getLogger(SiteStatisticsDto.class);
     // Amount of days a page contains.
     private static final int PAGE_SIZE = 3;
