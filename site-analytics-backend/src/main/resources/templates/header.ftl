@@ -15,10 +15,12 @@
 <script>
     const url = "ws://localhost:8080/stomp";
     const client = Stomp.client(url);
+
     let statisticsData;
     let chart;
-
+    let clientId = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
     let callback = function (frame) {
+        console.log("Received: " + JSON.stringify(frame));
         let statistics = JSON.parse(frame.body);
         processData(statistics);
         document.getElementById("processing").innerText = "";
@@ -26,8 +28,11 @@
         document.getElementById("site-chart").hidden = false;
     };
 
-    client.connect({}, function () {
-        var subscription = client.subscribe("weather-data-enriched", callback);
+    client.connect({
+        'client-id': clientId
+    }, function () {
+        var subscription = client.subscribe("weather-data-enriched", callback, {id: clientId,
+        'selector': "subscription = '" + clientId + "'"});
     })
 
     function init() {
@@ -104,7 +109,7 @@
 
         window.location.href = '/';
     }
-    
+
     function toggleButton(id, value) {
         if (value) {
             document.getElementById(id).setAttribute("disabled", value);
