@@ -30,6 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class HttpServerVerticle extends AbstractVerticle {
     private static final Logger LOGGER = LoggerFactory.getLogger(HttpServerVerticle.class);
@@ -116,22 +117,39 @@ public class HttpServerVerticle extends AbstractVerticle {
 
         // Clean up the local statistics store for sessions that no longer exist.
         rxVertx
-                .setPeriodic(THREE_MINUTES, handler -> {
-            LOGGER.debug("Local statistics store contains: {} items.", Objects.nonNull(localStatisticsStore) ? localStatisticsStore.size() : 0);
-            if (Objects.nonNull(localStatisticsStore)) {
-                localStatisticsStore
-                        .keySet()
-                        .stream()
-                        .peek(key -> LOGGER.debug("Checking session key: {}", key))
-                        .forEach(key -> sessionStore
-                                .rxGet(key)
-                                .doOnComplete(() -> LOGGER.debug("Session {} no longer exists. Removing corresponding statistics.", key))
-                                .subscribe(session -> LOGGER.debug("Session {} still active, don't remove corresponding statistics.", session.id()),
-                                        throwable -> LOGGER.error("Something went wrong while checking for existence of session key .", throwable),
-                                        // Session did not exist.
-                                        () -> this.localStatisticsStore.remove(key)));
-            }
-        });
+                .setPeriodic(ONE_MINUTE, handler -> {
+                    LOGGER.debug("Local statistics store contains: {} items.", Objects.nonNull(localStatisticsStore) ? localStatisticsStore.size() : 0);
+                    if (Objects.nonNull(localStatisticsStore)) {
+                        Set<String> toBeDeleted = new HashSet<>(localStatisticsStore.keySet().stream().collect(Collectors.toList()));
+
+                        Observable
+                                .fromIterable(localStatisticsStore.keySet())
+                                .flatMapMaybe(key -> sessionStore.rxGet(key))
+                                .doOnNext(session -> LOGGER.debug("Session key {} still exists. Don't delete.", session.id()))
+                                .doFinally(() -> LOGGER.debug("To be deleted contains {} items which will now be deleted from the statistics store. ", toBeDeleted.size()))
+                                .doFinally(() -> toBeDeleted.stream().forEach(key -> localStatisticsStore.remove(key)))
+                                .subscribe(session -> {
+                                            LOGGER.debug("In subscribe onNext (?) for session: {}", session.id());
+                                            toBeDeleted.remove(session.id());
+                                        },
+                                        throwable -> LOGGER.debug("Something went wrong while asserting which sessions no longer exist"),
+                                        () -> {
+                                            LOGGER.debug("Completed. No sessions found");
+                                        });
+
+//                localStatisticsStore
+//                        .keySet()
+//                        .stream()
+//                        .peek(key -> LOGGER.debug("Checking session key: {}", key))
+//                        .forEach(key -> sessionStore
+//                                .rxGet(key)
+//                                .doOnComplete(() -> LOGGER.debug("Session {} no longer exists. Removing corresponding statistics.", key))
+//                                .subscribe(session -> LOGGER.debug("Session {} still active, don't remove corresponding statistics.", session.id()),
+//                                        throwable -> LOGGER.error("Something went wrong while checking for existence of session key .", throwable),
+//                                         Session did not exist.
+//                                        () -> this.localStatisticsStore.remove(key)));
+                    }
+                });
     }
 
     private void previous(RoutingContext routingContext) {
@@ -240,12 +258,12 @@ public class HttpServerVerticle extends AbstractVerticle {
                             .doOnSuccess(message -> LOGGER.debug("An import has been processed with {} items.", message.body().getJsonArray("statistics", new JsonArray()).size()))
                             .flatMap(message -> Single.just(new SiteStatistics(message.body())))
                             .map(siteStatistics -> SiteStatisticsDto.fromOrderedStatistics((TreeSet) siteStatistics.getStatistics()))
-                            .doOnSuccess(dto -> ((SiteStatisticsDto)dto).first())
+                            .doOnSuccess(dto -> ((SiteStatisticsDto) dto).first())
                             .doOnSuccess(dto -> routingContext.session().put("importing", false))
                             .doOnSuccess(dto -> this.localStatisticsStore.put(routingContext.session().id(), (SiteStatisticsDto) dto))
                             .subscribe(dto -> vertx
                                             .eventBus()
-                                            .publish(UPDATE_STOMP_DESTINATION, ((SiteStatisticsDto)dto).getPageAsJson().encode()),
+                                            .publish(UPDATE_STOMP_DESTINATION, ((SiteStatisticsDto) dto).getPageAsJson().encode()),
                                     throwable -> LOGGER.error("Something went wrong while importing the file.", throwable));
                     // Just return with a message that we are not really going to use (could have used a completable too).
                     return Single.just(new JsonObject().put("message", "ok"));
