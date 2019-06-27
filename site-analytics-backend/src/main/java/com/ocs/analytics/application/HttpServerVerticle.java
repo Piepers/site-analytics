@@ -242,38 +242,80 @@ public class HttpServerVerticle extends AbstractVerticle {
     }
 
     private void importHandler(RoutingContext routingContext) {
-        // Offload the processing of the file to another Verticle so that we can respond immediately.
-        Observable
-                .fromIterable(routingContext.fileUploads())
-                .flatMapSingle(fileUpload -> {
-                    LOGGER.debug("Processing file: {}, {}, {}", fileUpload.fileName(), fileUpload.name(), fileUpload.uploadedFileName());
-                    // Put the contents of what we upload into a wrapper.
-                    FileUpload wrapper = FileUpload.from(fileUpload);
-                    // To be able to send this on the event-bus, map it to a JsonObject.
-                    JsonObject jsonObject = JsonObject.mapFrom(wrapper);
-                    // Send the message and let the handler wait for the reply.
-                    vertx
-                            .eventBus()
-                            .<JsonObject>rxSend("file-upload", jsonObject)
-                            .doOnSuccess(message -> LOGGER.debug("An import has been processed with {} items.", message.body().getJsonArray("statistics", new JsonArray()).size()))
-                            .flatMap(message -> Single.just(new SiteStatistics(message.body())))
-                            .map(siteStatistics -> SiteStatisticsDto.fromOrderedStatistics((TreeSet) siteStatistics.getStatistics()))
-                            .doOnSuccess(dto -> ((SiteStatisticsDto) dto).first())
-                            .doOnSuccess(dto -> routingContext.session().put("importing", false))
-                            .doOnSuccess(dto -> this.localStatisticsStore.put(routingContext.session().id(), (SiteStatisticsDto) dto))
-                            .subscribe(dto -> vertx
-                                            .eventBus()
-                                            .publish(UPDATE_STOMP_DESTINATION, ((SiteStatisticsDto) dto).getPageAsJson().encode()),
-                                    throwable -> LOGGER.error("Something went wrong while importing the file.", throwable));
-                    // Just return with a message that we are not really going to use (could have used a completable too).
-                    return Single.just(new JsonObject().put("message", "ok"));
-                })
-                .toList()
-                .doOnSuccess(jsonObjects -> routingContext.session().put("importing", true))
-                .flatMap(jsonObjects -> this.renderIndex(routingContext))
-                // But return immediately (don't wait for the file(-s) to be processed).
-                .subscribe(result -> routingContext.response().putHeader("Content-Type", "text/html").end(result),
-                        throwable -> routingContext.fail(throwable));
+        // We expect only one file at a time
+        if (routingContext.fileUploads().size() > 1) {
+            routingContext.response().setStatusCode(500).end("We should not receive more than one file at a time.");
+        }
+
+        Optional<io.vertx.reactivex.ext.web.FileUpload> fileUpload = routingContext.fileUploads().stream().findFirst();
+
+        // Expect at least something
+        if (!fileUpload.isPresent()) {
+            routingContext.response().setStatusCode(500).end("No file-upload was found.");
+        } else {
+
+            // Offload the processing of the file to another Verticle so that we can respond immediately.
+            FileUpload wrapper = FileUpload.from(fileUpload.get());
+            LOGGER.debug("Processing file: {} with uploaded filename of: {} and size: {}", wrapper.getFileName(), wrapper.getUploadedFileName(), wrapper.getSize());
+            // Process the file and subsribe to the response.
+            vertx
+                    .eventBus()
+                    .<JsonObject>rxSend("file-upload", JsonObject.mapFrom(wrapper))
+                    .doOnSuccess(message -> LOGGER.debug("An import has been processed with {} items.", message.body().getJsonArray("statistics", new JsonArray()).size()))
+                    .map(message -> new SiteStatistics(message.body()))
+                    .map(siteStatistics -> SiteStatisticsDto.fromOrderedStatistics((TreeSet) siteStatistics.getStatistics()))
+                    .doOnSuccess(dto -> ((SiteStatisticsDto) dto).first())
+                    .doOnSuccess(dto -> this.localStatisticsStore.put(routingContext.session().id(), (SiteStatisticsDto) dto))
+                    .map(dto -> ((SiteStatisticsDto) dto).getPageAsJson())
+                    .subscribe(jo -> routingContext
+                                    .response()
+                                    .putHeader("Content-Type", "application/json")
+                                    .end(((JsonObject) jo).encode()),
+                            throwable -> routingContext
+                                    .fail((Throwable) throwable));
+        }
+
+//        Observable
+//                .fromIterable(routingContext.fileUploads())
+//                .map(fileUpload -> FileUpload.from(fileUpload))
+//                .doOnNext(wrapper -> LOGGER.debug("Processing file: {}, {}, {}", wrapper.getFileName(), wrapper.getUploadedFileName(), wrapper.getSize()))
+//                .map(wrapper -> JsonObject.mapFrom(wrapper))
+//                .flatMapSingle(jo -> vertx.eventBus().<JsonObject>rxSend("file-upload", jo))
+//                .doOnNext(message -> LOGGER.debug("An import has been processed with {} items.", message.body().getJsonArray("statistics", new JsonArray()).size()))
+//                .flatMapSingle(message -> Single.just(new SiteStatistics(message.body())))
+//                .map(siteStatistics -> SiteStatisticsDto.fromOrderedStatistics((TreeSet) siteStatistics.getStatistics()))
+//                .doOnNext(dto -> ((SiteStatisticsDto) dto).first())
+//                .doOnNext(dto -> routingContext.session().put("importing", false))
+//                .doOnNext(dto -> this.localStatisticsStore.put(routingContext.session().id(), dto))
+//                .flatMapSingle(fileUpload -> {
+//                    LOGGER.debug("Processing file: {}, {}, {}", fileUpload.fileName(), fileUpload.name(), fileUpload.uploadedFileName());
+//                    // Put the contents of what we upload into a wrapper.
+//                    FileUpload wrapper = FileUpload.from(fileUpload);
+//                    // To be able to send this on the event-bus, map it to a JsonObject.
+//                    JsonObject jsonObject = JsonObject.mapFrom(wrapper);
+//                    // Send the message and let the handler wait for the reply.
+//                    vertx
+//                            .eventBus()
+//                            .<JsonObject>rxSend("file-upload", jsonObject)
+//                            .doOnSuccess(message -> LOGGER.debug("An import has been processed with {} items.", message.body().getJsonArray("statistics", new JsonArray()).size()))
+//                            .flatMap(message -> Single.just(new SiteStatistics(message.body())))
+//                            .map(siteStatistics -> SiteStatisticsDto.fromOrderedStatistics((TreeSet) siteStatistics.getStatistics()))
+//                            .doOnSuccess(dto -> ((SiteStatisticsDto) dto).first())
+//                            .doOnSuccess(dto -> routingContext.session().put("importing", false))
+//                            .doOnSuccess(dto -> this.localStatisticsStore.put(routingContext.session().id(), (SiteStatisticsDto) dto))
+//                            .subscribe(dto -> vertx
+//                                            .eventBus()
+//                                            .publish(UPDATE_STOMP_DESTINATION, ((SiteStatisticsDto) dto).getPageAsJson().encode()),
+//                                    throwable -> LOGGER.error("Something went wrong while importing the file.", throwable));
+//                    // Just return with a message that we are not really going to use (could have used a completable too).
+//                    return Single.just(new JsonObject().put("message", "ok"));
+//                })
+//                .toList()
+//                .doOnSuccess(jsonObjects -> routingContext.session().put("importing", true))
+//                .flatMap(jsonObjects -> this.renderIndex(routingContext))
+//                // But return immediately (don't wait for the file(-s) to be processed).
+//                .subscribe(result -> routingContext.response().putHeader("Content-Type", "text/html").end(result),
+//                        throwable -> routingContext.fail(throwable));
 
 
     }

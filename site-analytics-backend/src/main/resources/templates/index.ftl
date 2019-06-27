@@ -1,33 +1,33 @@
 <#include "header.ftl">
 <div class="row">
-    <div class="col align-self-center">
-        <#assign importing=context.session().get("importing")!false>
-        <#if importing != true>
-            <h1>Import a CSV file</h1>
-            <p>
-                Select a file and click "Import"
-            </p>
-            <form class="form-inline" action="/import" method="post" enctype="multipart/form-data">
-                <div class="form-group">
-                    <input type="file" class="form-control-file" id="csv" accept=".csv" name="file"/>
-                </div>
-                <div class="button">
-                    <button type="submit" class="btn btn-primary">Send</button>
-                </div>
-            </form>
-        <#else>
-            <span id="processing">Processing your file.</span>
-        </#if>
+    <div id="form-upload" class="col align-self-center">
+        <h1>Import a CSV file</h1>
+        <p>
+            Select a file and click "Import"
+        </p>
+        <form id="upload" class="form-inline" method="post" onsubmit="handleSubmit(e, this)">
+            <div class="form-group">
+                <input type="file" class="form-control-file" id="csv" accept=".csv" name="file"/>
+            </div>
+            <div class="button">
+<#--                <button type="submit" class="btn btn-primary" >Send</button>-->
+                <button type="submit" class="btn btn-primary">Send</button>
+            </div>
+        </form>
+
+        <span id="processing"></span>
     </div>
     <div class="col-md-12 mt-1">
         <canvas id="site-chart" hidden></canvas>
     </div>
 </div>
+
 <div id="button-row" class="row" hidden>
     <div class="col text-center">
         <div class="btn-group" role="group" aria-label="Pagination">
             <button id="begin-button" type="button" class="btn btn-primary" onclick="handleBegin()"><< Begin</button>
-            <button id="previous-button" type="button" class="btn btn-primary" onclick="handlePrevious()">< Previous</button>
+            <button id="previous-button" type="button" class="btn btn-primary" onclick="handlePrevious()">< Previous
+            </button>
             <button id="back" type="button" class="btn btn-primary" onclick="reset()">Back</button>
             <button id="next-button" type="button" class="btn btn-primary" onclick="handleNext()">Next ></button>
             <button id="end-button" type="button" class="btn btn-primary" onclick="handleEnd()">End >></button>
@@ -35,4 +35,153 @@
     </div>
 </div>
 
+<script>
+    let statisticsData;
+    let chart;
+
+    // let callback = function (frame) {
+    //     let statistics = JSON.parse(frame.body);
+    //     processData(statistics);
+    //     document.getElementById("processing").innerText = "";
+    //     document.getElementById("button-row").hidden = false;
+    //     document.getElementById("site-chart").hidden = false;
+    // };
+
+
+    function init() {
+        let ctx = document.getElementById('site-chart').getContext('2d');
+        this.chart = new Chart(ctx, {
+            type: 'line',
+
+            data: {},
+
+            options: {}
+        });
+    }
+
+    function processData(statistics) {
+        statisticsData = statistics;
+        let pages = statisticsData.page;
+        let labelData = [];
+        let tempData = [];
+        let vititorData = [];
+        pages.forEach(page => {
+            let labels = page.labels;
+            labels.forEach(lbl => labelData.push(lbl))
+            let temps = page.tempData;
+            temps.forEach(tmp => tempData.push(tmp));
+            let users = page.usersData;
+            users.forEach(usrs => vititorData.push(usrs));
+        });
+
+        let chartData = {
+
+            labels: labelData,
+            datasets: [{
+                label: 'Visits',
+                fill: false,
+                backgroundColor: 'rgb(255, 99, 132)',
+                borderColor: 'rgb(255, 99, 132)',
+                data: vititorData
+            },
+                {
+                    label: 'Temperature',
+                    fill: false,
+                    backgroundColor: 'rgb(79, 114, 255)',
+                    borderColor: 'rgb(30, 45, 255)',
+                    data: tempData
+                }]
+        }
+
+        this.chart.data = chartData;
+        this.chart.update();
+
+        if (statisticsData.sop == statisticsData.startKey) {
+            this.toggleButton("begin-button", true);
+            this.toggleButton("previous-button", true);
+        } else {
+            this.toggleButton("begin-button", false);
+            this.toggleButton("previous-button", false);
+        }
+
+        if (statisticsData.eop == statisticsData.endKey) {
+            this.toggleButton("end-button", true);
+            this.toggleButton("next-button", true);
+        } else {
+            this.toggleButton("end-button", false);
+            this.toggleButton("next-button", false);
+        }
+    }
+
+    function reset() {
+        this.chart.destroy();
+        this.init();
+
+        document.getElementById("button-row").hidden = true;
+        document.getElementById("site-chart").hidden = true;
+
+        window.location.href = '/';
+    }
+
+    function toggleButton(id, value) {
+        if (value) {
+            document.getElementById(id).setAttribute("disabled", value);
+        } else {
+            document.getElementById(id).removeAttribute("disabled");
+        }
+    }
+
+    function handleBegin() {
+        fetch("http://localhost:8080/api/statistics/first")
+            .then(response => response.json())
+            .then(processData);
+
+    }
+
+    function handleNext() {
+        fetch("http://localhost:8080/api/statistics/next")
+            .then(response => response.json())
+            .then(processData);
+
+    }
+
+    function handlePrevious() {
+        fetch("http://localhost:8080/api/statistics/previous")
+            .then(response => response.json())
+            .then(processData);
+
+    }
+
+    function handleEnd() {
+        fetch("http://localhost:8080/api/statistics/last")
+            .then(response => response.json())
+            .then(processData);
+    }
+
+    function handleSubmit(e, form) {
+        e.preventDefault();
+        console.log("In handleSubmit...");
+
+        const input = document.getElementById('csv');
+        console.log("Input is: " + input);
+
+        const formData = new FormData();
+
+        formData.append('file', input.files[0]);
+
+        // fetch("http://localhost:8080/import", {
+        //     method: 'POST',
+            // headers: {
+            //     'Accept': 'application/json, text/plain, */*',
+            // 'Content-type': 'multipart-form-data'
+            // },
+            // body: formData
+        // })
+        //     .then((response) => response.json())
+        //     .then((body) => console.log("We have data: " + body))
+
+    }
+
+    window.onload = init;
+</script>
 <#include "footer.ftl">
