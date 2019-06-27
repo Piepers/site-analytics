@@ -5,13 +5,14 @@
         <p>
             Select a file and click "Import"
         </p>
-        <form id="upload" class="form-inline" method="post" onsubmit="handleSubmit(e, this)">
+        <form id="upload" class="form-inline">
             <div class="form-group">
                 <input type="file" class="form-control-file" id="csv" accept=".csv" name="file"/>
             </div>
             <div class="button">
+                <input type="submit" class="btn btn-primary" value="Send"/>
 <#--                <button type="submit" class="btn btn-primary" >Send</button>-->
-                <button type="submit" class="btn btn-primary">Send</button>
+<#--                <button type="submit" class="btn btn-primary">Send</button>-->
             </div>
         </form>
 
@@ -28,7 +29,7 @@
             <button id="begin-button" type="button" class="btn btn-primary" onclick="handleBegin()"><< Begin</button>
             <button id="previous-button" type="button" class="btn btn-primary" onclick="handlePrevious()">< Previous
             </button>
-            <button id="back" type="button" class="btn btn-primary" onclick="reset()">Back</button>
+            <button id="back-button" type="button" class="btn btn-primary" onclick="reset()">Back</button>
             <button id="next-button" type="button" class="btn btn-primary" onclick="handleNext()">Next ></button>
             <button id="end-button" type="button" class="btn btn-primary" onclick="handleEnd()">End >></button>
         </div>
@@ -36,6 +37,14 @@
 </div>
 
 <script>
+    document.getElementById('begin-button').addEventListener('click', handleBegin);
+    document.getElementById('previous-button').addEventListener('click', handlePrevious);
+    document.getElementById('back-button').addEventListener('click',reset);
+    document.getElementById('next-button').addEventListener('click', handleNext);
+    document.getElementById('end-button').addEventListener('click', handleEnd);
+    document.getElementById('upload').addEventListener('submit', handleSubmit);
+
+
     let statisticsData;
     let chart;
 
@@ -158,8 +167,9 @@
             .then(processData);
     }
 
-    function handleSubmit(e, form) {
+    function handleSubmit(e) {
         e.preventDefault();
+
         console.log("In handleSubmit...");
 
         const input = document.getElementById('csv');
@@ -168,17 +178,17 @@
         const formData = new FormData();
 
         formData.append('file', input.files[0]);
-
-        // fetch("http://localhost:8080/import", {
-        //     method: 'POST',
+        console.log("Formdata is: " + formData['file']);
+        fetch("http://localhost:8080/import", {
+            method: 'POST',
             // headers: {
             //     'Accept': 'application/json, text/plain, */*',
             // 'Content-type': 'multipart-form-data'
             // },
-            // body: formData
-        // })
-        //     .then((response) => response.json())
-        //     .then((body) => console.log("We have data: " + body))
+            body: formData
+        })
+            .then((response) => response.json())
+            .then((body) => console.log("We have data: " + body))
 
     }
 
