@@ -133,21 +133,7 @@ public class HttpServerVerticle extends AbstractVerticle {
                                             toBeDeleted.remove(session.id());
                                         },
                                         throwable -> LOGGER.debug("Something went wrong while asserting which sessions no longer exist"),
-                                        () -> {
-                                            LOGGER.debug("Completed. No sessions found");
-                                        });
-
-//                localStatisticsStore
-//                        .keySet()
-//                        .stream()
-//                        .peek(key -> LOGGER.debug("Checking session key: {}", key))
-//                        .forEach(key -> sessionStore
-//                                .rxGet(key)
-//                                .doOnComplete(() -> LOGGER.debug("Session {} no longer exists. Removing corresponding statistics.", key))
-//                                .subscribe(session -> LOGGER.debug("Session {} still active, don't remove corresponding statistics.", session.id()),
-//                                        throwable -> LOGGER.error("Something went wrong while checking for existence of session key .", throwable),
-//                                         Session did not exist.
-//                                        () -> this.localStatisticsStore.remove(key)));
+                                        () -> LOGGER.debug("Completed. No sessions found"));
                     }
                 });
     }
@@ -274,50 +260,6 @@ public class HttpServerVerticle extends AbstractVerticle {
                             throwable -> routingContext
                                     .fail((Throwable) throwable));
         }
-
-//        Observable
-//                .fromIterable(routingContext.fileUploads())
-//                .map(fileUpload -> FileUpload.from(fileUpload))
-//                .doOnNext(wrapper -> LOGGER.debug("Processing file: {}, {}, {}", wrapper.getFileName(), wrapper.getUploadedFileName(), wrapper.getSize()))
-//                .map(wrapper -> JsonObject.mapFrom(wrapper))
-//                .flatMapSingle(jo -> vertx.eventBus().<JsonObject>rxSend("file-upload", jo))
-//                .doOnNext(message -> LOGGER.debug("An import has been processed with {} items.", message.body().getJsonArray("statistics", new JsonArray()).size()))
-//                .flatMapSingle(message -> Single.just(new SiteStatistics(message.body())))
-//                .map(siteStatistics -> SiteStatisticsDto.fromOrderedStatistics((TreeSet) siteStatistics.getStatistics()))
-//                .doOnNext(dto -> ((SiteStatisticsDto) dto).first())
-//                .doOnNext(dto -> routingContext.session().put("importing", false))
-//                .doOnNext(dto -> this.localStatisticsStore.put(routingContext.session().id(), dto))
-//                .flatMapSingle(fileUpload -> {
-//                    LOGGER.debug("Processing file: {}, {}, {}", fileUpload.fileName(), fileUpload.name(), fileUpload.uploadedFileName());
-//                    // Put the contents of what we upload into a wrapper.
-//                    FileUpload wrapper = FileUpload.from(fileUpload);
-//                    // To be able to send this on the event-bus, map it to a JsonObject.
-//                    JsonObject jsonObject = JsonObject.mapFrom(wrapper);
-//                    // Send the message and let the handler wait for the reply.
-//                    vertx
-//                            .eventBus()
-//                            .<JsonObject>rxSend("file-upload", jsonObject)
-//                            .doOnSuccess(message -> LOGGER.debug("An import has been processed with {} items.", message.body().getJsonArray("statistics", new JsonArray()).size()))
-//                            .flatMap(message -> Single.just(new SiteStatistics(message.body())))
-//                            .map(siteStatistics -> SiteStatisticsDto.fromOrderedStatistics((TreeSet) siteStatistics.getStatistics()))
-//                            .doOnSuccess(dto -> ((SiteStatisticsDto) dto).first())
-//                            .doOnSuccess(dto -> routingContext.session().put("importing", false))
-//                            .doOnSuccess(dto -> this.localStatisticsStore.put(routingContext.session().id(), (SiteStatisticsDto) dto))
-//                            .subscribe(dto -> vertx
-//                                            .eventBus()
-//                                            .publish(UPDATE_STOMP_DESTINATION, ((SiteStatisticsDto) dto).getPageAsJson().encode()),
-//                                    throwable -> LOGGER.error("Something went wrong while importing the file.", throwable));
-//                    // Just return with a message that we are not really going to use (could have used a completable too).
-//                    return Single.just(new JsonObject().put("message", "ok"));
-//                })
-//                .toList()
-//                .doOnSuccess(jsonObjects -> routingContext.session().put("importing", true))
-//                .flatMap(jsonObjects -> this.renderIndex(routingContext))
-//                // But return immediately (don't wait for the file(-s) to be processed).
-//                .subscribe(result -> routingContext.response().putHeader("Content-Type", "text/html").end(result),
-//                        throwable -> routingContext.fail(throwable));
-
-
     }
 
     private void indexHandler(RoutingContext routingContext) {

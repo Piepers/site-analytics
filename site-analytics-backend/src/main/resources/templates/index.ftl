@@ -180,10 +180,6 @@
         formData.append('file', input.files[0]);
         fetch("http://localhost:8080/import", {
             method: 'POST',
-            // headers: {
-            //     'Accept': 'application/json, text/plain, */*',
-            // 'Content-type': 'multipart-form-data'
-            // },
             body: formData
         })
             .then((response) => response.json())
