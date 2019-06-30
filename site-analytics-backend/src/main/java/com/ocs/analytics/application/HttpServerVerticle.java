@@ -117,7 +117,7 @@ public class HttpServerVerticle extends AbstractVerticle {
 
         // Clean up the local statistics store for sessions that no longer exist.
         rxVertx
-                .setPeriodic(ONE_MINUTE, handler -> {
+                .setPeriodic(THREE_MINUTES, handler -> {
                     LOGGER.debug("Local statistics store contains: {} items.", Objects.nonNull(localStatisticsStore) ? localStatisticsStore.size() : 0);
                     if (Objects.nonNull(localStatisticsStore)) {
                         Set<String> toBeDeleted = new HashSet<>(localStatisticsStore.keySet().stream().collect(Collectors.toList()));
