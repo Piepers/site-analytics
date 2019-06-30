@@ -11,11 +11,10 @@
             </div>
             <div class="button">
                 <input type="submit" class="btn btn-primary" value="Send"/>
-<#--                <button type="submit" class="btn btn-primary" >Send</button>-->
-<#--                <button type="submit" class="btn btn-primary">Send</button>-->
             </div>
         </form>
-
+    </div>
+    <div id="status" hidden>
         <span id="processing"></span>
     </div>
     <div class="col-md-12 mt-1">
@@ -39,7 +38,7 @@
 <script>
     document.getElementById('begin-button').addEventListener('click', handleBegin);
     document.getElementById('previous-button').addEventListener('click', handlePrevious);
-    document.getElementById('back-button').addEventListener('click',reset);
+    document.getElementById('back-button').addEventListener('click', reset);
     document.getElementById('next-button').addEventListener('click', handleNext);
     document.getElementById('end-button').addEventListener('click', handleEnd);
     document.getElementById('upload').addEventListener('submit', handleSubmit);
@@ -169,16 +168,16 @@
 
     function handleSubmit(e) {
         e.preventDefault();
+        document.getElementById("status").hidden = false;
+        document.getElementById("processing").innerText = "Processing your data."
+        document.getElementById("form-upload").hidden = true;
 
-        console.log("In handleSubmit...");
 
         const input = document.getElementById('csv');
-        console.log("Input is: " + input);
 
         const formData = new FormData();
 
         formData.append('file', input.files[0]);
-        console.log("Formdata is: " + formData['file']);
         fetch("http://localhost:8080/import", {
             method: 'POST',
             // headers: {
@@ -188,7 +187,13 @@
             body: formData
         })
             .then((response) => response.json())
-            .then((body) => console.log("We have data: " + body))
+            .then((body) => {
+                processData(body);
+                document.getElementById("processing").innerText = "";
+                document.getElementById("status").hidden=true;
+                document.getElementById("button-row").hidden = false;
+                document.getElementById("site-chart").hidden = false;
+            })
 
     }
 
